@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisador Léxico - Mini_Pascal | UESB</title>
+    <!-- Folha de Estilos Vanilla CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Cabeçalho Principal -->
+    <header class="header-topo">
+        <div class="header-info">
+            <h1>
+                <span>Compiladores</span>
+                <span class="logo-tag">Mini_Pascal</span>
+            </h1>
+            <p>Trabalho Prático da I Unidade &bull; UESB &bull; Analisador Léxico baseado em AFD</p>
+        </div>
+        <div class="header-badges">
+            <span class="info-chip">Autômato Finito Determinístico</span>
+            <span class="info-chip">JavaScript Vanilla</span>
+        </div>
+    </header>
+
+    <!-- Painel de Métricas e Estatísticas Rápidas -->
+    <section class="painel-stats">
+        <div class="card-stat">
+            <span class="stat-label">Tokens Reconhecidos</span>
+            <span class="stat-valor" id="stat-tokens">0</span>
+        </div>
+        <div class="card-stat stat-erros">
+            <span class="stat-label">Erros Léxicos</span>
+            <span class="stat-valor" id="stat-erros">0</span>
+        </div>
+        <div class="card-stat">
+            <span class="stat-label">Linhas de Código</span>
+            <span class="stat-valor" id="stat-linhas">0</span>
+        </div>
+        <div class="card-stat stat-tempo">
+            <span class="stat-label">Tempo de Análise</span>
+            <span class="stat-valor" id="stat-tempo">0ms</span>
+        </div>
+    </section>
+
+    <!-- Área Principal de Trabalho (Editor e Saída) -->
+    <main class="conteudo-principal">
+        
+        <!-- Coluna Esquerda: Editor de Código Fonte -->
+        <section class="painel-card">
+            <div class="painel-cabecalho">
+                <h2>💻 Código Fonte (Mini_Pascal)</h2>
+                <div class="barra-ferramentas">
+                    <!-- Seletor de Testes Prontos -->
+                    <select id="select-exemplo" class="select-exemplo" title="Carregar exemplo pré-definido">
+                        <option value="teste1">Teste 1: Exemplo Oficial (pi, if-else)</option>
+                        <option value="teste2">Teste 2: Programa Piloto (for, strings)</option>
+                        <option value="teste3">Teste 3: Repetições (while, repeat, lógicos)</option>
+                        <option value="teste4">Teste 4: Tipos e Notação Científica</option>
+                        <option value="teste5">Teste 5: Detecção de Erros Léxicos</option>
+                    </select>
+
+                    <!-- Input invisível para upload de arquivo .txt -->
+                    <input type="file" id="input-arquivo" accept=".txt,.pas" style="display: none;">
+                    <button id="btn-upload" class="btn btn-secondary btn-sm" title="Abrir arquivo de texto">
+                        📂 Abrir .txt
+                    </button>
+                    
+                    <button id="btn-limpar" class="btn btn-outline btn-sm" title="Limpar editor">
+                        🗑️ Limpar
+                    </button>
+
+                    <button id="btn-analisar" class="btn btn-primary btn-sm" title="Executar o analisador léxico">
+                        ▶ Executar Análise
+                    </button>
+                </div>
+            </div>
+
+            <!-- Editor com numeração de linhas -->
+            <div class="container-editor">
+                <div id="numeros-linha" class="numeros-linha">
+                    <span>1</span>
+                </div>
+                <textarea id="editor-codigo" class="textarea-codigo" placeholder="Digite ou cole aqui o seu código-fonte na linguagem Mini_Pascal..." spellcheck="false"></textarea>
+            </div>
+        </section>
+
+        <!-- Coluna Direita: Tokens Reconhecidos e Saída -->
+        <section class="painel-card">
+            <div class="painel-cabecalho">
+                <h2>📋 Tokens Reconhecidos</h2>
+                <div class="barra-ferramentas">
+                    <!-- Abas de Visualização -->
+                    <div class="abas-container">
+                        <button id="tab-tabela" class="btn-tab active">Tabela</button>
+                        <button id="tab-texto" class="btn-tab">Texto .txt</button>
+                    </div>
+
+                    <!-- Download do Arquivo .txt com o par <cadeia, token> por linha -->
+                    <button id="btn-baixar-txt" class="btn btn-secondary btn-sm" title="Baixar listagem em arquivo .txt">
+                        💾 Baixar saída .txt
+                    </button>
+                </div>
+            </div>
+
+            <div class="container-saida">
+                <!-- Visão 1: Tabela Estruturada -->
+                <div id="view-tabela">
+                    <table class="tabela-tokens">
+                        <thead>
+                            <tr>
+                                <th class="col-num">#</th>
+                                <th>Lexema</th>
+                                <th>Token Reconhecido</th>
+                                <th class="col-pos">Linha</th>
+                                <th class="col-pos">Coluna</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-tokens">
+                            <tr>
+                                <td colspan="5" class="tabela-vazia">Nenhum token reconhecido ainda.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Visão 2: Formato Texto <cadeia, token> exigido na entrega -->
+                <div id="view-texto" class="oculto" style="height: 100%;">
+                    <textarea id="saida-texto-formatado" class="area-saida-texto" readonly placeholder="A saída formatada em texto puro aparecerá aqui..."></textarea>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Painel de Relatório de Erros Léxicos -->
+    <section id="secao-erros" class="secao-erros oculto">
+        <h3>⚠️ Erros Léxicos Detectados</h3>
+        <div id="lista-erros" class="lista-erros"></div>
+    </section>
+
+    <!-- Documentação Técnica Integrada (Especificação do Autômato e Decisões de Projeto) -->
+    <section class="secao-doc-tecnica">
+        <h3>📖 Especificações e Documentação do Autômato Finito Determinístico (AFD)</h3>
+        
+        <div class="grid-doc">
+            <!-- Card 1: Decisões de Projeto -->
+            <div class="doc-card">
+                <h4>Decisões de Projeto (Conforme Roteiro UESB)</h4>
+                <ul>
+                    <li><strong>Limite de Identificadores:</strong> Suporta qualquer tamanho; identificadores iniciam com <code>[a-zA-Z_]</code> seguidos por letras, números ou underscore.</li>
+                    <li><strong>Estrutura de Dados:</strong> Tabela de Palavras Reservadas implementada via <code>Set</code> com busca em tempo constante <strong>O(1)</strong> e sensibilidade case-insensitive.</li>
+                    <li><strong>Comentários de Bloco:</strong> Delimitados por <code>/* ... */</code>, são reconhecidos e descartados explicitamente pelo autômato (não produzem token).</li>
+                    <li><strong>Tratamento de Erros:</strong> Modo de recuperação léxica que sinaliza o caractere/lexema desconhecido com linha e coluna exatas, continuando a análise dos tokens seguintes.</li>
+                </ul>
+            </div>
+
+            <!-- Card 2: Resumo dos Estados do AFD -->
+            <div class="doc-card">
+                <h4>Estados do Autômato Finito Determinístico</h4>
+                <table class="tabela-afd-resumo">
+                    <thead>
+                        <tr>
+                            <th>Estado</th>
+                            <th>Entrada</th>
+                            <th>Ação / Próximo Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>S0 (Início)</td><td>[a-zA-Z_]</td><td>S1 (Identificador / Palavra Reservada)</td></tr>
+                        <tr><td>S0 (Início)</td><td>[0-9]</td><td>S2 (Número Inteiro)</td></tr>
+                        <tr><td>S2</td><td>'.' + [0-9]</td><td>S4 (Número Real)</td></tr>
+                        <tr><td>S2 / S4</td><td>'e' / 'E'</td><td>S5, S6, S7 (Notação Exponencial)</td></tr>
+                        <tr><td>S0 (Início)</td><td>':'</td><td>S8 (se '=' &rarr; ':=' Atribuição, senão ':')</td></tr>
+                        <tr><td>S0 (Início)</td><td>'<' ou '>'</td><td>S9, S10 (se '=' &rarr; '<=', '>=', '<>')</td></tr>
+                        <tr><td>S0 (Início)</td><td>'/'</td><td>S11 (se '*' &rarr; Comentário de bloco S12)</td></tr>
+                        <tr><td>S0 (Início)</td><td>'"' ou "'"</td><td>S14 (String) / S15 (Caractere)</td></tr>
+                        <tr><td>S0 (Início)</td><td>'.'</td><td>Token 'Fim' (delimitador de fim de programa)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Card 3: Lista de Tokens Reconhecidos -->
+            <div class="doc-card">
+                <h4>Tokens Reconhecidos</h4>
+                <ul>
+                    <li><strong>Palavra reservada:</strong> ABSOLUTE, ARRAY, BEGIN, CONST, FOR, IF, INTEGER, REAL, VAR, WHILE...</li>
+                    <li><strong>Identificador:</strong> Nomes de variáveis, constantes, funções (ex: x, nota1, total).</li>
+                    <li><strong>Número inteiro:</strong> Sequência de dígitos decimais (ex: 1, 13, 100).</li>
+                    <li><strong>Número real:</strong> Ponto flutuante e notação científica (ex: 3.1416, 24.40e-04).</li>
+                    <li><strong>Operador aritmético:</strong> <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>mod</code>.</li>
+                    <li><strong>Operador relacional:</strong> <code>=</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;&gt;</code>.</li>
+                    <li><strong>Operador lógico:</strong> <code>and</code>, <code>or</code>, <code>not</code>.</li>
+                    <li><strong>Símbolo especial:</strong> <code>,</code>, <code>:</code>, <code>;</code>, <code>(</code>, <code>)</code>.</li>
+                    <li><strong>Atribuição:</strong> <code>:=</code>.</li>
+                    <li><strong>Fim:</strong> <code>.</code> no fechamento do bloco principal <code>end.</code></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rodapé -->
+    <footer class="rodape">
+        <p>UESB &bull; Departamento de Ciências Exatas (DCET) &bull; Compiladores &bull; Analisador Léxico Mini_Pascal</p>
+    </footer>
+
+    <!-- Scripts JavaScript (Vanilla, sem dependências externas) -->
+    <script src="lexer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
