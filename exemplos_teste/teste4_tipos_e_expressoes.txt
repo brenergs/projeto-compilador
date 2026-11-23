@@ -1,0 +1,20 @@
+program TiposEConstantes;
+var
+    letra: char;
+    mensagem: string;
+    fator1, fator2, total: real;
+    expoente: real;
+/* Testando números reais exponenciais, caracteres delimitados por aspas simples e strings */
+begin
+    letra := 'A';
+    mensagem := "Processando calculos cientificos...";
+    writeln(mensagem);
+    
+    fator1 := 1.33;
+    fator2 := 24.40e-04;
+    expoente := 1.5e+02;
+    
+    total := (fator1 * fator2) / expoente;
+    writeln("Total calculado = ", total);
+    writeln("Caractere selecionado = ", letra);
+end.

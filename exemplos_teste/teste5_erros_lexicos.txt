@@ -1,0 +1,14 @@
+program TesteErrosLexicos;
+var
+    salario, taxa: real;
+    nome: string;
+    caractereInvalido: char;
+begin
+    /* Testando caracteres desconhecidos e erros de formatacao */
+    salario := 1500.00;
+    taxa := 12.e;        /* Erro: expoente incompleto */
+    Mari& := 10;         /* Erro: símbolo '&' desconhecido */
+    nome := "String nao fechada nesta linha;
+    caractereInvalido := 'abc'; /* Erro: char com mais de 1 caractere */
+    valor@ := #50;       /* Erros: símbolos '@' e '#' desconhecidos */
+end.

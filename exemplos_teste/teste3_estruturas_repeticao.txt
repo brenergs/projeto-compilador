@@ -1,0 +1,22 @@
+program RepeticoesEOperadores;
+var
+    i, limite, resultado: integer;
+    ativo: integer;
+/* Teste de laços while e repeat com operadores relacionais e lógicos */
+begin
+    i := 0;
+    limite := 10;
+    
+    while (i <= limite) and not (i = 5) do
+    begin
+        resultado := i mod 2;
+        if (resultado = 0) or (i >= 8) then
+            writeln("Par ou maior que oito: ", i);
+        i := i + 1;
+    end;
+
+    repeat
+        i := i - 1;
+        write("Regredindo: ", i);
+    until (i <> 0);
+end.
