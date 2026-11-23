@@ -1,0 +1,7 @@
+program SemDeclaracoes;
+/* Programa válido sem bloco var (segunda produção de S) */
+begin
+    writeln("Executando sem variaveis declaradas");
+    readln;
+    writeln((10 + 20) * -2 / 5);
+end.

@@ -1,15 +1,15 @@
 # UNIVERSIDADE ESTADUAL DO SUDOESTE DA BAHIA – UESB
 ## Departamento de Ciências Exatas – DCET
 ### Curso: Ciência da Computação | Disciplina: Compiladores
-**Trabalho Prático da I Unidade: Implementação do Analisador Léxico (Mini_Pascal)**
+**Trabalho Prático da I e II Unidades: Analisador Léxico (AFD) e Analisador Sintático SLR(1) (Mini_Pascal / Sigma)**
 
 ---
 
 ## 1. Visão Geral do Projeto
 
-Este projeto consiste na implementação de um **Analisador Léxico** para a linguagem **Mini_Pascal**, construído estritamente sobre a teoria de **Linguagens Formais e Autômatos Finitos Determinísticos (AFD)**.
+Este projeto implementa o **Analisador Léxico** (baseado em Autômato Finito Determinístico - AFD) e o **Analisador Sintático Ascendente SLR(1)** para a linguagem **Sigma**, além da construção da **Tabela de Símbolos** e rastreamento passo a passo da pilha sintática.
 
-O analisador foi desenvolvido utilizando **HTML5, Vanilla CSS e Vanilla JavaScript** puros, atendendo plenamente à exigência de **execução direta sem necessidade de compilação, instalação de dependências ou frameworks adicionais**.
+O sistema foi desenvolvido utilizando **HTML5, Vanilla CSS e Vanilla JavaScript** puros, atendendo plenamente à exigência de **execução direta sem necessidade de compilação, instalação de dependências ou frameworks adicionais**.
 
 ---
 
@@ -141,13 +141,14 @@ O analisador léxico opera formalmente como uma 5-tupla $M = (\Sigma, Q, \delta,
 
 ## 5. Relação dos Arquivos de Teste
 
-O projeto inclui um diretório [`exemplos_teste/`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/exemplos_teste/) com 5 arquivos completos e diversificados:
+O projeto inclui um diretório [`exemplos_teste/`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/) com 6 arquivos de teste para a linguagem Sigma:
 
-1. **[`teste1_exemplo_documento.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/exemplos_teste/teste1_exemplo_documento.txt)**: Exemplo 1 original fornecido no roteiro do trabalho (cálculo com `pi`, condicionais `if-then-else`, `read`, `write`, `writeln`).
-2. **[`teste2_programa_piloto.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/exemplos_teste/teste2_programa_piloto.txt)**: Exemplo 2 fornecido no roteiro (laço `for cont=1 to total do`, cálculo de médias com reais, comentários de bloco e mensagens em constantes strings).
-3. **[`teste3_estruturas_repeticao.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/exemplos_teste/teste3_estruturas_repeticao.txt)**: Teste com laços `while-do` e `repeat-until`, operadores lógicos `and`, `or`, `not`, operadores relacionais `<>`, `<=`, `>=` e operador aritmético `mod`.
-4. **[`teste4_tipos_e_expressoes.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/exemplos_teste/teste4_tipos_e_expressoes.txt)**: Teste com notação científica de números reais (ex: `24.40e-04`, `1.5e+02`), constantes de caracteres delimitadas por aspas simples `'A'` e constantes strings.
-5. **[`teste5_erros_lexicos.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/exemplos_teste/teste5_erros_lexicos.txt)**: Teste contendo propositalmente erros léxicos para validar a resiliência do compilador (símbolos desconhecidos como `&`, `@`, `#`, expoentes incompletos e strings não fechadas).
+1. **[`teste1_programa_completo.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste1_programa_completo.txt)**: Programa completo com declarações (`integer`, `boolean`), `read`, atribuições, `if-then-else`, `write` e `writeln`.
+2. **[`teste2_while_composto.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste2_while_composto.txt)**: Laço `while`, comandos compostos `begin ... end`, `readln(limite)` e expressões aritméticas.
+3. **[`teste3_sem_declaracoes.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste3_sem_declaracoes.txt)**: Programa válido sem bloco `var`, `readln` sem argumentos e expressões com parênteses e operador unário `-`.
+4. **[`teste4_dangling_else_relacionais.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste4_dangling_else_relacionais.txt)**: Condicionais aninhadas (*dangling-else*), todos os operadores relacionais (`<`, `<=`, `>`, `>=`, `=`, `<>`) e condição booleana simples (`if flag then`).
+5. **[`teste5_erros_sintaticos.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste5_erros_sintaticos.txt)**: Teste com erros sintáticos propositais para validar a rejeição SLR(1) e mensagens explicativas com tokens esperados.
+6. **[`teste6_erros_lexicos.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste6_erros_lexicos.txt)**: Teste com erros léxicos (`&`, `@`, `#`, string não fechada).
 
 ---
 
@@ -159,13 +160,16 @@ projeto-compilador/
 ├── index.html                   # Interface gráfica web amigável (executável direto)
 ├── style.css                    # Folha de estilos moderna (Vanilla CSS)
 ├── lexer.js                     # Motor léxico baseado no AFD (ricamente comentado)
+├── parser.js                    # Analisador Sintático SLR(1) + Tabela de Símbolos
 ├── app.js                       # Controlador da interface e manipulação de arquivos
-├── DOCUMENTACAO.md              # Documentação completa para entrega
+├── README.md                    # Visão geral do projeto
+├── DOCUMENTACAO_II_UNIDADE.md   # Documentação em formato de artigo (II Unidade)
 │
 └── exemplos_teste/              # Arquivos .txt de teste exigidos na especificação
-    ├── teste1_exemplo_documento.txt
-    ├── teste2_programa_piloto.txt
-    ├── teste3_estruturas_repeticao.txt
-    ├── teste4_tipos_e_expressoes.txt
-    └── teste5_erros_lexicos.txt
+    ├── teste1_programa_completo.txt
+    ├── teste2_while_composto.txt
+    ├── teste3_sem_declaracoes.txt
+    ├── teste4_dangling_else_relacionais.txt
+    ├── teste5_erros_sintaticos.txt
+    └── teste6_erros_lexicos.txt
 ```

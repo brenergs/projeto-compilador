@@ -641,3 +641,63 @@ body {
 .oculto {
     display: none !important;
 }
+
+/* --------------------------------------------------------------------------
+   Estilos do Analisador Sintático SLR(1) e Tabela de Símbolos
+   -------------------------------------------------------------------------- */
+.banner-sintatico {
+    padding: 0.75rem 1rem;
+    margin: 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.banner-aceito {
+    background: rgba(52, 211, 153, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    color: var(--success);
+}
+
+.banner-erro {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    color: var(--danger);
+}
+
+.tabela-slr td {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stat-ok .stat-valor {
+    color: var(--success);
+}
+
+.stat-erro-sintatico .stat-valor {
+    color: var(--danger);
+}
+
+.lista-avisos {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.item-aviso {
+    background: rgba(251, 191, 36, 0.08);
+    border-left: 3px solid var(--warning);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    color: var(--warning);
+}

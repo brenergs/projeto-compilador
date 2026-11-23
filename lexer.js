@@ -3,7 +3,7 @@
  * UNIVERSIDADE ESTADUAL DO SUDOESTE DA BAHIA - UESB
  * Departamento de Ciências Exatas - DCET
  * Disciplina: Compiladores
- * Trabalho Prático da I Unidade - Analisador Léxico (Mini_Pascal)
+ * Trabalho Prático da I e II Unidades - Analisador Léxico (Mini_Pascal / Sigma)
  * ============================================================================
  * 
  * Este arquivo implementa o Analisador Léxico baseado em um
@@ -21,13 +21,13 @@
 // busca insensível a maiúsculas/minúsculas (case-insensitive), padrão Pascal.
 
 const PALAVRAS_RESERVADAS = new Set([
-    "ABSOLUTE", "ARRAY", "BEGIN", "CASE", "CHAR", "CONST", "DIV", "DO", 
+    "ABSOLUTE", "ARRAY", "BEGIN", "BOOLEAN", "CASE", "CHAR", "CONST", "DIV", "DO", 
     "DOWTO", "ELSE", "END", "EXTERNAL", "FILE", "FOR", "FORWARD", "FUNC", 
     "FUNCTION", "GOTO", "IF", "IMPLEMENTATION", "INTEGER", "INTERFACE", 
     "INTERRUPT", "LABEL", "MAIN", "NIL", "NIT", "OF", "PACKED", "PROC", 
-    "PROGRAM", "REAL", "RECORD", "REPEAT", "SET", "SHL", "SHR", "STRING", 
+    "PROGRAM", "READ", "READLN", "REAL", "RECORD", "REPEAT", "SET", "SHL", "SHR", "STRING", 
     "THEN", "TO", "TYPE", "UNIT", "UNTIL", "USES", "VAR", "WHILE", 
-    "WITH", "XOR"
+    "WITH", "WRITE", "WRITELN", "XOR"
 ]);
 
 // Operadores lógicos e aritméticos textuais especiais
