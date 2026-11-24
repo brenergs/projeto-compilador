@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const secaoErrosSintaticos = document.getElementById("secao-erros-sintaticos");
     const listaErrosSintaticos = document.getElementById("lista-erros-sintaticos");
 
-    // Abas
+    // Abas de visualização de resultados
     const abas = [
         { btn: document.getElementById("tab-rastreamento"), view: document.getElementById("view-rastreamento") },
         { btn: document.getElementById("tab-simbolos"), view: document.getElementById("view-simbolos") },
@@ -127,8 +127,128 @@ document.addEventListener("DOMContentLoaded", () => {
     let tokensAtuais = [];
     let errosAtuais = [];
 
-    // Instância única do analisador sintático SLR(1)
+    // Instância única do analisador sintático SLR(1) e do Simulador Visual do AFD
     const parser = new AnalisadorSintatico();
+    const simuladorAFD = new SimuladorVisualAFD("svg-afd");
+
+    // Elementos do Modal Popup do Simulador AFD
+    const btnFlutuanteAFD = document.getElementById("btn-flutuante-afd");
+    const btnHeaderSimulador = document.getElementById("btn-header-simulador");
+    const modalSimuladorAFD = document.getElementById("modal-simulador-afd");
+    const btnFecharModalAFD = document.getElementById("btn-fechar-modal-afd");
+
+    // Elementos do Modal de Especificações
+    const btnAbrirEspecs = document.getElementById("btn-abrir-especs");
+    const modalEspecs = document.getElementById("modal-especs");
+    const btnFecharModalEspecs = document.getElementById("btn-fechar-modal-especs");
+
+    // Elementos da interface do Simulador AFD (dentro do modal)
+    const btnAfdInicio = document.getElementById("btn-afd-inicio");
+    const btnAfdAnt = document.getElementById("btn-afd-ant");
+    const btnAfdPlay = document.getElementById("btn-afd-play");
+    const btnAfdProx = document.getElementById("btn-afd-prox");
+    const rangeAfdVel = document.getElementById("range-afd-vel");
+    const labelAfdVel = document.getElementById("label-afd-vel");
+
+    // Controles de Zoom e Pan
+    const btnZoomMenos = document.getElementById("btn-zoom-menos");
+    const btnZoomMais = document.getElementById("btn-zoom-mais");
+    const btnZoomReset = document.getElementById("btn-zoom-reset");
+    const labelZoomNivel = document.getElementById("label-zoom-nivel");
+
+    const hudAfdPasso = document.getElementById("afd-hud-passo");
+    const hudAfdChar = document.getElementById("afd-hud-char");
+    const hudAfdLexema = document.getElementById("afd-hud-lexema");
+    const hudAfdEstado = document.getElementById("afd-hud-estado");
+    const hudAfdMsg = document.getElementById("afd-hud-msg");
+
+    // Controle de abertura e fechamento do Modal do Simulador
+    function abrirModalAFD() {
+        modalSimuladorAFD.classList.remove("oculto");
+        simuladorAFD.atualizarVisualizacao();
+    }
+
+    function fecharModalAFD() {
+        modalSimuladorAFD.classList.add("oculto");
+        simuladorAFD.pausar();
+    }
+
+    if (btnFlutuanteAFD) btnFlutuanteAFD.addEventListener("click", abrirModalAFD);
+    if (btnHeaderSimulador) btnHeaderSimulador.addEventListener("click", abrirModalAFD);
+    if (btnFecharModalAFD) btnFecharModalAFD.addEventListener("click", fecharModalAFD);
+
+    // Controle de abertura e fechamento do Modal de Especificações
+    function abrirModalEspecs() {
+        modalEspecs.classList.remove("oculto");
+    }
+
+    function fecharModalEspecs() {
+        modalEspecs.classList.add("oculto");
+    }
+
+    if (btnAbrirEspecs) btnAbrirEspecs.addEventListener("click", abrirModalEspecs);
+    if (btnFecharModalEspecs) btnFecharModalEspecs.addEventListener("click", fecharModalEspecs);
+
+    // Fechar modais ao clicar fora do conteúdo (overlay) ou via tecla Escape
+    modalSimuladorAFD.addEventListener("click", (e) => {
+        if (e.target === modalSimuladorAFD) {
+            fecharModalAFD();
+        }
+    });
+
+    modalEspecs.addEventListener("click", (e) => {
+        if (e.target === modalEspecs) {
+            fecharModalEspecs();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            if (!modalSimuladorAFD.classList.contains("oculto")) fecharModalAFD();
+            if (!modalEspecs.classList.contains("oculto")) fecharModalEspecs();
+        }
+    });
+
+    // Eventos de feedback de Zoom
+    simuladorAFD.onZoomMudou = (nivelZoom) => {
+        if (labelZoomNivel) labelZoomNivel.textContent = `${nivelZoom}%`;
+    };
+
+    if (btnZoomMais) btnZoomMais.addEventListener("click", () => simuladorAFD.zoomMais());
+    if (btnZoomMenos) btnZoomMenos.addEventListener("click", () => simuladorAFD.zoomMenos());
+    if (btnZoomReset) btnZoomReset.addEventListener("click", () => simuladorAFD.resetarZoom());
+
+    // Eventos de feedback do simulador para o HUD
+    simuladorAFD.onPassoMudou = (passo, indice, total) => {
+        hudAfdPasso.textContent = `${indice + 1} / ${total}`;
+        hudAfdChar.textContent = passo.charLido || "EOF";
+        hudAfdLexema.textContent = passo.lexema || "(vazio)";
+        hudAfdEstado.textContent = `S${passo.estadoDestino}`;
+        hudAfdMsg.textContent = `[Passo ${indice + 1}] ${passo.descricao}`;
+    };
+
+    simuladorAFD.onStatusExecucao = (emExecucao) => {
+        btnAfdPlay.textContent = emExecucao ? "⏸ Pause" : "▶ Play";
+        btnAfdPlay.classList.toggle("btn-secondary", emExecucao);
+        btnAfdPlay.classList.toggle("btn-primary", !emExecucao);
+    };
+
+    btnAfdInicio.addEventListener("click", () => simuladorAFD.irParaInicio());
+    btnAfdAnt.addEventListener("click", () => simuladorAFD.anterior());
+    btnAfdProx.addEventListener("click", () => simuladorAFD.proximo());
+    btnAfdPlay.addEventListener("click", () => {
+        if (simuladorAFD.emExecucao) {
+            simuladorAFD.pausar();
+        } else {
+            simuladorAFD.reproduzir();
+        }
+    });
+
+    rangeAfdVel.addEventListener("input", (e) => {
+        const vel = parseInt(e.target.value, 10);
+        labelAfdVel.textContent = `${vel}ms`;
+        simuladorAFD.setVelocidade(vel);
+    });
 
     // ------------------------------------------------------------------------
     // Sincronização de numeração de linha do editor
@@ -199,6 +319,12 @@ document.addEventListener("DOMContentLoaded", () => {
         editor.value = "";
         tokensAtuais = [];
         errosAtuais = [];
+        simuladorAFD.carregarPassos([]);
+        hudAfdPasso.textContent = "0 / 0";
+        hudAfdChar.textContent = "-";
+        hudAfdLexema.textContent = "-";
+        hudAfdEstado.textContent = "S0";
+        hudAfdMsg.textContent = "Editor limpo. Carregue um código para simular o AFD.";
         atualizarNumerosLinha();
         renderizarResultados([], [], null);
         contadorTokens.textContent = "0";
@@ -215,6 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function executarAnalise() {
         const codigo = editor.value;
         if (!codigo.trim()) {
+            simuladorAFD.carregarPassos([]);
             renderizarResultados([], [], null);
             contadorTokens.textContent = "0";
             contadorErros.textContent = "0";
@@ -228,8 +355,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const tInicio = performance.now();
         const lexer = new AnalisadorLexico(codigo);
         const resultadoLexico = lexer.executar();
+        const passosAFD = lexer.gerarSimulacaoAFD();
         const resultadoSintatico = parser.analisar(resultadoLexico.tokens);
         const tFim = performance.now();
+
+        // Carrega o histórico de passos no simulador visual
+        simuladorAFD.carregarPassos(passosAFD);
 
         tokensAtuais = resultadoLexico.tokens;
         errosAtuais = resultadoLexico.erros;

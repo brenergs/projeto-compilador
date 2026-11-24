@@ -90,6 +90,7 @@ class AnalisadorLexico {
         this.linha = 1;     // Número da linha atual
         this.coluna = 1;    // Número da coluna atual
         this.erros = [];    // Lista de erros léxicos encontrados
+        this.historicoPassos = []; // Passos de transição do AFD para simulação visual
     }
 
     /**
@@ -597,8 +598,382 @@ class AnalisadorLexico {
 
         return {
             tokens,
-            erros: this.erros
+            erros: this.erros,
+            passosAFD: this.historicoPassos
         };
+    }
+
+    /**
+     * Gera uma sequência detalhada de passos da máquina de estados do AFD
+     * para visualização e simulação didática de IHC.
+     */
+    gerarSimulacaoAFD() {
+        // Reinicializa cursor
+        this.posicao = 0;
+        this.linha = 1;
+        this.coluna = 1;
+        this.erros = [];
+        const passos = [];
+
+        let estado = ESTADO.INICIO;
+        let lexema = "";
+        let posInicio = 0;
+
+        const registrarPasso = (tipoAcao, estadoOrigem, estadoDestino, charLido, descricao) => {
+            passos.push({
+                posicaoCursor: this.posicao,
+                linha: this.linha,
+                coluna: this.coluna,
+                tipoAcao, // 'transicao', 'descarte', 'reconhecimento', 'erro'
+                estadoOrigem,
+                estadoDestino,
+                charLido: charLido === '\n' ? '\\n' : (charLido === '\t' ? '\\t' : (charLido === ' ' ? '␣' : charLido)),
+                lexema,
+                descricao
+            });
+        };
+
+        // Estado inicial
+        registrarPasso('inicio', ESTADO.INICIO, ESTADO.INICIO, null, 'Início do processamento no estado S0');
+
+        while (this.posicao < this.tamanho) {
+            const c = this.caractereAtual();
+            const posAtual = this.posicao;
+
+            switch (estado) {
+                case ESTADO.INICIO:
+                    posInicio = this.posicao;
+                    if (this.isEspaco(c)) {
+                        this.avancar();
+                        registrarPasso('descarte', ESTADO.INICIO, ESTADO.INICIO, c, `Espaço em branco descartado: '${c === '\n' ? '\\n' : (c === ' ' ? '␣' : c)}'`);
+                        continue;
+                    }
+
+                    if (this.isLetra(c)) {
+                        lexema += this.avancar();
+                        estado = ESTADO.IDENTIFICADOR;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.IDENTIFICADOR, c, `Letra lida '${c}' -> transita para S1 (Identificador/Palavra)`);
+                        break;
+                    }
+
+                    if (this.isDigito(c)) {
+                        lexema += this.avancar();
+                        estado = ESTADO.NUMERO_INTEIRO;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.NUMERO_INTEIRO, c, `Dígito lido '${c}' -> transita para S2 (Número Inteiro)`);
+                        break;
+                    }
+
+                    if (c === ':') {
+                        lexema += this.avancar();
+                        estado = ESTADO.DOIS_PONTOS;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.DOIS_PONTOS, c, `Caractere ':' lido -> transita para S8 (Dois Pontos / Atribuição)`);
+                        break;
+                    }
+
+                    if (c === '<') {
+                        lexema += this.avancar();
+                        estado = ESTADO.MENOR;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.MENOR, c, `Caractere '<' lido -> transita para S9 (Menor / Relacional)`);
+                        break;
+                    }
+
+                    if (c === '>') {
+                        lexema += this.avancar();
+                        estado = ESTADO.MAIOR;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.MAIOR, c, `Caractere '>' lido -> transita para S10 (Maior / Relacional)`);
+                        break;
+                    }
+
+                    if (c === '=') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.INICIO, ESTADO.INICIO, c, `Operador relacional '=' reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                        break;
+                    }
+
+                    if (c === '+' || c === '-' || c === '*') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.INICIO, ESTADO.INICIO, c, `Operador aritmético '${c}' reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                        break;
+                    }
+
+                    if (c === '/') {
+                        lexema += this.avancar();
+                        estado = ESTADO.BARRA;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.BARRA, c, `Caractere '/' lido -> transita para S11 (Barra / Divisão / Comentário)`);
+                        break;
+                    }
+
+                    if (c === '.') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.INICIO, ESTADO.INICIO, c, `Delimitador '.' (Fim) reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                        break;
+                    }
+
+                    if (c === ',' || c === ';' || c === '(' || c === ')') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.INICIO, ESTADO.INICIO, c, `Símbolo especial '${c}' reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                        break;
+                    }
+
+                    if (c === "'") {
+                        lexema += this.avancar();
+                        estado = ESTADO.CARACTERE;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.CARACTERE, c, `Aspas simples "'" lida -> transita para S15 (Caractere)`);
+                        break;
+                    }
+
+                    if (c === '"') {
+                        lexema += this.avancar();
+                        estado = ESTADO.STRING;
+                        registrarPasso('transicao', ESTADO.INICIO, ESTADO.STRING, c, `Aspas duplas '"' lida -> transita para S14 (String)`);
+                        break;
+                    }
+
+                    lexema += this.avancar();
+                    registrarPasso('erro', ESTADO.INICIO, ESTADO.INICIO, c, `Caractere inválido ou desconhecido '${c}'`);
+                    lexema = "";
+                    estado = ESTADO.INICIO;
+                    break;
+
+                case ESTADO.IDENTIFICADOR:
+                    if (this.isLetra(c) || this.isDigito(c)) {
+                        lexema += this.avancar();
+                        registrarPasso('transicao', ESTADO.IDENTIFICADOR, ESTADO.IDENTIFICADOR, c, `Caractere '${c}' acumulado no identificador "${lexema}"`);
+                    } else {
+                        const upper = lexema.toUpperCase();
+                        let tipo = 'Identificador';
+                        if (PALAVRAS_RESERVADAS.has(upper)) tipo = 'Palavra reservada';
+                        else if (OPERADORES_LOGICOS.has(upper)) tipo = 'Operador lógico';
+                        else if (OPERADORES_ARITMETICOS_TEXTUAIS.has(upper)) tipo = 'Operador aritmético';
+
+                        registrarPasso('reconhecimento', ESTADO.IDENTIFICADOR, ESTADO.INICIO, null, `${tipo} "${lexema}" reconhecido(a) com sucesso`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+
+                case ESTADO.NUMERO_INTEIRO:
+                    if (this.isDigito(c)) {
+                        lexema += this.avancar();
+                        registrarPasso('transicao', ESTADO.NUMERO_INTEIRO, ESTADO.NUMERO_INTEIRO, c, `Dígito '${c}' acumulado no inteiro "${lexema}"`);
+                    } else if (c === '.') {
+                        const prox = this.espiarProximo();
+                        if (this.isDigito(prox)) {
+                            lexema += this.avancar();
+                            estado = ESTADO.NUMERO_REAL;
+                            registrarPasso('transicao', ESTADO.NUMERO_INTEIRO, ESTADO.NUMERO_REAL, c, `Ponto fracionário lido -> transita para S4 (Número Real)`);
+                        } else {
+                            registrarPasso('reconhecimento', ESTADO.NUMERO_INTEIRO, ESTADO.INICIO, null, `Número inteiro "${lexema}" reconhecido`);
+                            lexema = "";
+                            estado = ESTADO.INICIO;
+                        }
+                    } else if (c === 'e' || c === 'E') {
+                        lexema += this.avancar();
+                        estado = ESTADO.NUMERO_EXP_INICIO;
+                        registrarPasso('transicao', ESTADO.NUMERO_INTEIRO, ESTADO.NUMERO_EXP_INICIO, c, `Expoente '${c}' lido -> transita para S5 (Exp Início)`);
+                    } else {
+                        registrarPasso('reconhecimento', ESTADO.NUMERO_INTEIRO, ESTADO.INICIO, null, `Número inteiro "${lexema}" reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+
+                case ESTADO.NUMERO_REAL:
+                    if (this.isDigito(c)) {
+                        lexema += this.avancar();
+                        registrarPasso('transicao', ESTADO.NUMERO_REAL, ESTADO.NUMERO_REAL, c, `Dígito fracionário '${c}' acumulado em "${lexema}"`);
+                    } else if (c === 'e' || c === 'E') {
+                        lexema += this.avancar();
+                        estado = ESTADO.NUMERO_EXP_INICIO;
+                        registrarPasso('transicao', ESTADO.NUMERO_REAL, ESTADO.NUMERO_EXP_INICIO, c, `Expoente '${c}' lido -> transita para S5`);
+                    } else {
+                        registrarPasso('reconhecimento', ESTADO.NUMERO_REAL, ESTADO.INICIO, null, `Número real "${lexema}" reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+
+                case ESTADO.NUMERO_EXP_INICIO:
+                    if (c === '+' || c === '-') {
+                        lexema += this.avancar();
+                        estado = ESTADO.NUMERO_EXP_SINAL;
+                        registrarPasso('transicao', ESTADO.NUMERO_EXP_INICIO, ESTADO.NUMERO_EXP_SINAL, c, `Sinal de expoente '${c}' lido -> transita para S6`);
+                    } else if (this.isDigito(c)) {
+                        lexema += this.avancar();
+                        estado = ESTADO.NUMERO_EXP_DIGITOS;
+                        registrarPasso('transicao', ESTADO.NUMERO_EXP_INICIO, ESTADO.NUMERO_EXP_DIGITOS, c, `Dígito de expoente '${c}' lido -> transita para S7`);
+                    } else {
+                        registrarPasso('erro', ESTADO.NUMERO_EXP_INICIO, ESTADO.INICIO, c, `Formato de expoente inválido em "${lexema}"`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+
+                case ESTADO.NUMERO_EXP_SINAL:
+                    if (this.isDigito(c)) {
+                        lexema += this.avancar();
+                        estado = ESTADO.NUMERO_EXP_DIGITOS;
+                        registrarPasso('transicao', ESTADO.NUMERO_EXP_SINAL, ESTADO.NUMERO_EXP_DIGITOS, c, `Dígito de expoente '${c}' lido após sinal -> transita para S7`);
+                    } else {
+                        registrarPasso('erro', ESTADO.NUMERO_EXP_SINAL, ESTADO.INICIO, c, `Esperado dígito após sinal em "${lexema}"`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+
+                case ESTADO.NUMERO_EXP_DIGITOS:
+                    if (this.isDigito(c)) {
+                        lexema += this.avancar();
+                        registrarPasso('transicao', ESTADO.NUMERO_EXP_DIGITOS, ESTADO.NUMERO_EXP_DIGITOS, c, `Dígito '${c}' acumulado no expoente`);
+                    } else {
+                        registrarPasso('reconhecimento', ESTADO.NUMERO_EXP_DIGITOS, ESTADO.INICIO, null, `Número real exponencial "${lexema}" reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+
+                case ESTADO.DOIS_PONTOS:
+                    if (c === '=') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.DOIS_PONTOS, ESTADO.INICIO, c, `Operador de atribuição ':=' reconhecido`);
+                    } else {
+                        registrarPasso('reconhecimento', ESTADO.DOIS_PONTOS, ESTADO.INICIO, null, `Símbolo especial ':' reconhecido`);
+                    }
+                    lexema = "";
+                    estado = ESTADO.INICIO;
+                    break;
+
+                case ESTADO.MENOR:
+                    if (c === '=' || c === '>') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.MENOR, ESTADO.INICIO, c, `Operador relacional '${lexema}' reconhecido`);
+                    } else {
+                        registrarPasso('reconhecimento', ESTADO.MENOR, ESTADO.INICIO, null, `Operador relacional '<' reconhecido`);
+                    }
+                    lexema = "";
+                    estado = ESTADO.INICIO;
+                    break;
+
+                case ESTADO.MAIOR:
+                    if (c === '=') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.MAIOR, ESTADO.INICIO, c, `Operador relacional '>=' reconhecido`);
+                    } else {
+                        registrarPasso('reconhecimento', ESTADO.MAIOR, ESTADO.INICIO, null, `Operador relacional '>' reconhecido`);
+                    }
+                    lexema = "";
+                    estado = ESTADO.INICIO;
+                    break;
+
+                case ESTADO.BARRA:
+                    if (c === '*') {
+                        this.avancar();
+                        estado = ESTADO.COMENTARIO_BLOCO;
+                        registrarPasso('transicao', ESTADO.BARRA, ESTADO.COMENTARIO_BLOCO, c, `Início de comentário '/*' -> transita para S12`);
+                    } else {
+                        registrarPasso('reconhecimento', ESTADO.BARRA, ESTADO.INICIO, null, `Operador aritmético '/' reconhecido`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+
+                case ESTADO.COMENTARIO_BLOCO:
+                    if (c === '*') {
+                        this.avancar();
+                        estado = ESTADO.COMENTARIO_FECHANDO;
+                        registrarPasso('transicao', ESTADO.COMENTARIO_BLOCO, ESTADO.COMENTARIO_FECHANDO, c, `Asterisco '*' dentro de comentário -> transita para S13`);
+                    } else {
+                        this.avancar();
+                        registrarPasso('descarte', ESTADO.COMENTARIO_BLOCO, ESTADO.COMENTARIO_BLOCO, c, `Caractere dentro do comentário descartado`);
+                    }
+                    break;
+
+                case ESTADO.COMENTARIO_FECHANDO:
+                    if (c === '/') {
+                        this.avancar();
+                        estado = ESTADO.INICIO;
+                        registrarPasso('reconhecimento', ESTADO.COMENTARIO_FECHANDO, ESTADO.INICIO, c, `Fechamento de comentário '*/' -> retorna a S0`);
+                        lexema = "";
+                    } else if (c === '*') {
+                        this.avancar();
+                        registrarPasso('transicao', ESTADO.COMENTARIO_FECHANDO, ESTADO.COMENTARIO_FECHANDO, c, `Asterisco consecutivo`);
+                    } else {
+                        this.avancar();
+                        estado = ESTADO.COMENTARIO_BLOCO;
+                        registrarPasso('transicao', ESTADO.COMENTARIO_FECHANDO, ESTADO.COMENTARIO_BLOCO, c, `Retorna ao corpo do comentário em S12`);
+                    }
+                    break;
+
+                case ESTADO.STRING:
+                    if (c === '"') {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.STRING, ESTADO.INICIO, c, `Constante string "${lexema}" reconhecida`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    } else if (c === '\n' || c === null) {
+                        registrarPasso('erro', ESTADO.STRING, ESTADO.INICIO, c, `String não fechada antes do fim da linha`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    } else {
+                        lexema += this.avancar();
+                        registrarPasso('transicao', ESTADO.STRING, ESTADO.STRING, c, `Caractere '${c}' acumulado na string`);
+                    }
+                    break;
+
+                case ESTADO.CARACTERE:
+                    if (c === "'") {
+                        lexema += this.avancar();
+                        registrarPasso('erro', ESTADO.CARACTERE, ESTADO.INICIO, c, `Constante caractere vazia '' não permitida`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    } else if (c === '\n' || c === null) {
+                        registrarPasso('erro', ESTADO.CARACTERE, ESTADO.INICIO, c, `Constante caractere não fechada`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    } else {
+                        lexema += this.avancar();
+                        estado = ESTADO.CARACTERE_FECHA;
+                        registrarPasso('transicao', ESTADO.CARACTERE, ESTADO.CARACTERE_FECHA, c, `Caractere '${c}' lido -> transita para S16`);
+                    }
+                    break;
+
+                case ESTADO.CARACTERE_FECHA:
+                    if (c === "'") {
+                        lexema += this.avancar();
+                        registrarPasso('reconhecimento', ESTADO.CARACTERE_FECHA, ESTADO.INICIO, c, `Constante caractere '${lexema}' reconhecida`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    } else {
+                        while (this.posicao < this.tamanho && this.caractereAtual() !== "'" && this.caractereAtual() !== '\n') {
+                            lexema += this.avancar();
+                        }
+                        if (this.caractereAtual() === "'") lexema += this.avancar();
+                        registrarPasso('erro', ESTADO.CARACTERE_FECHA, ESTADO.INICIO, c, `Constante caractere inválida: '${lexema}'`);
+                        lexema = "";
+                        estado = ESTADO.INICIO;
+                    }
+                    break;
+            }
+        }
+
+        // Se terminar e restou algo acumulado
+        if (estado === ESTADO.IDENTIFICADOR && lexema) {
+            registrarPasso('reconhecimento', ESTADO.IDENTIFICADOR, ESTADO.INICIO, null, `Identificador/Palavra "${lexema}" reconhecido(a) no final`);
+        } else if (estado === ESTADO.NUMERO_INTEIRO && lexema) {
+            registrarPasso('reconhecimento', ESTADO.NUMERO_INTEIRO, ESTADO.INICIO, null, `Número inteiro "${lexema}" reconhecido no final`);
+        } else if (estado === ESTADO.NUMERO_REAL && lexema) {
+            registrarPasso('reconhecimento', ESTADO.NUMERO_REAL, ESTADO.INICIO, null, `Número real "${lexema}" reconhecido no final`);
+        }
+
+        return passos;
     }
 }
 

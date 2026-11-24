@@ -45,8 +45,10 @@ body {
     background-color: var(--bg-base);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    line-height: 1.6;
-    min-height: 100vh;
+    line-height: 1.5;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -57,15 +59,16 @@ body {
 .header-topo {
     background: linear-gradient(180deg, #1e293b 0%, rgba(30, 41, 59, 0.8) 100%);
     border-bottom: 1px solid var(--border-color);
-    padding: 1rem 2rem;
+    padding: 0.6rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     backdrop-filter: blur(8px);
+    flex-shrink: 0;
 }
 
 .header-info h1 {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--text-primary);
     display: flex;
@@ -76,21 +79,22 @@ body {
 .header-info h1 .logo-tag {
     background: var(--accent);
     color: #0f172a;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
-    padding: 0.2rem 0.5rem;
+    padding: 0.15rem 0.45rem;
     border-radius: var(--radius-sm);
     text-transform: uppercase;
 }
 
 .header-info p {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
 }
 
-.header-badges {
+.header-opcoes {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.6rem;
+    align-items: center;
 }
 
 .info-chip {
@@ -107,34 +111,45 @@ body {
    -------------------------------------------------------------------------- */
 .painel-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    padding: 1rem 2rem;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+    .painel-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .card-stat {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.75rem;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
 .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     color: var(--text-muted);
     font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .stat-valor {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-top: 0.25rem;
+    margin-top: 0.1rem;
+    line-height: 1.2;
 }
 
 .card-stat.stat-erros .stat-valor {
@@ -151,52 +166,76 @@ body {
 .conteudo-principal {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    padding: 0 2rem 2rem 2rem;
+    gap: 1rem;
+    padding: 0.25rem 1.5rem 0.75rem 1.5rem;
     flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 @media (max-width: 1024px) {
     .conteudo-principal {
         grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+    body {
+        overflow-y: auto;
     }
 }
 
 .painel-card {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     box-shadow: var(--shadow);
+    min-height: 0;
+    height: 100%;
 }
 
 .painel-cabecalho {
-    padding: 0.85rem 1.25rem;
+    padding: 0.5rem 1rem;
     background-color: rgba(15, 23, 42, 0.5);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    flex-shrink: 0;
 }
 
 .painel-cabecalho h2 {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 .barra-ferramentas {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
+}
+
+.barra-ferramentas-saida {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 768px) {
+    .barra-ferramentas-saida {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
 }
 
 /* --------------------------------------------------------------------------
@@ -274,7 +313,8 @@ body {
     display: flex;
     flex: 1;
     background-color: var(--bg-input);
-    min-height: 480px;
+    min-height: 0;
+    height: 100%;
     font-family: var(--font-mono);
     position: relative;
     overflow: hidden;
@@ -282,12 +322,12 @@ body {
 
 .numeros-linha {
     width: 45px;
-    padding: 1rem 0.5rem;
+    padding: 0.65rem 0.5rem;
     background-color: rgba(15, 23, 42, 0.8);
     border-right: 1px solid var(--border-color);
     color: var(--text-muted);
-    font-size: 0.85rem;
-    line-height: 1.5rem;
+    font-size: 0.82rem;
+    line-height: 1.45rem;
     text-align: right;
     user-select: none;
     display: flex;
@@ -300,15 +340,15 @@ body {
     background: transparent;
     border: none;
     outline: none;
-    padding: 1rem;
+    padding: 0.65rem 1rem;
     color: #e2e8f0;
     font-family: var(--font-mono);
     font-size: 0.85rem;
-    line-height: 1.5rem;
+    line-height: 1.45rem;
     resize: none;
     tab-size: 4;
     white-space: pre;
-    overflow-x: auto;
+    overflow: auto;
 }
 
 /* --------------------------------------------------------------------------
@@ -318,7 +358,7 @@ body {
     display: flex;
     gap: 0.25rem;
     background-color: var(--bg-surface-elevated);
-    padding: 0.25rem;
+    padding: 0.2rem;
     border-radius: var(--radius-sm);
 }
 
@@ -326,8 +366,8 @@ body {
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 0.35rem 0.75rem;
-    font-size: 0.75rem;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.72rem;
     font-weight: 600;
     cursor: pointer;
     border-radius: 4px;
@@ -341,8 +381,8 @@ body {
 
 .container-saida {
     flex: 1;
-    min-height: 480px;
-    max-height: 560px;
+    min-height: 0;
+    height: 100%;
     overflow: auto;
     background-color: var(--bg-input);
     position: relative;
@@ -700,4 +740,373 @@ body {
     border-radius: var(--radius-sm);
     font-size: 0.82rem;
     color: var(--warning);
+}
+
+/* --------------------------------------------------------------------------
+   Simulador Visual do AFD (IHC)
+   -------------------------------------------------------------------------- */
+/* Botão Flutuante no Canto Inferior Esquerdo */
+.btn-flutuante-afd {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 50px;
+    padding: 0.65rem 1.15rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+}
+
+.btn-flutuante-afd:hover {
+    transform: translateY(-3px) scale(1.03);
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    box-shadow: 0 15px 30px -5px rgba(56, 189, 248, 0.6);
+    border-color: #38bdf8;
+}
+
+.btn-flutuante-afd:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.icone-btn-flutuante {
+    font-size: 1.1rem;
+}
+
+.badge-pulsante-afd {
+    background-color: #0f172a;
+    color: #38bdf8;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.15rem 0.4rem;
+    border-radius: 20px;
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    text-transform: uppercase;
+}
+
+/* Modal Popup Overlay */
+.modal-afd-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(11, 17, 32, 0.8);
+    backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-afd-conteudo {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+    width: 100%;
+    max-width: 1050px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: scaleInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleInModal {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-afd-cabecalho {
+    padding: 1rem 1.25rem;
+    background-color: var(--bg-surface-elevated);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-afd-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modal-icone {
+    font-size: 1.5rem;
+}
+
+.modal-afd-titulo h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-afd-titulo p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.btn-fechar-modal {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+}
+
+.btn-fechar-modal:hover {
+    color: var(--danger);
+    background-color: rgba(248, 113, 113, 0.1);
+}
+
+.modal-especs-conteudo {
+    max-width: 1100px;
+    max-height: 88vh;
+}
+
+.modal-especs-corpo {
+    padding: 1.25rem;
+    overflow-y: auto;
+    max-height: calc(88vh - 75px);
+}
+
+.modal-viewport {
+    height: 540px;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+}
+
+#svg-afd.arrastando {
+    cursor: grabbing;
+}
+
+/* Controles de Zoom e Pan */
+.controles-zoom-pan {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--bg-surface);
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.label-zoom {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    min-width: 40px;
+    text-align: center;
+}
+.painel-controle-afd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-surface-elevated);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.botoes-player {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.btn-xs {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.controle-velocidade {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.controle-velocidade input[type="range"] {
+    width: 90px;
+    accent-color: var(--accent);
+}
+
+.hud-afd {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--bg-input);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.5rem;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem;
+}
+
+.hud-rotulo {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+.hud-valor {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.hud-destaque {
+    color: var(--accent);
+}
+
+.hud-estado {
+    color: var(--success);
+}
+
+.afd-mensagem-passo {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
+    background: rgba(56, 189, 248, 0.08);
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.svg-viewport-wrapper {
+    width: 100%;
+    height: 480px;
+    overflow: auto;
+    background: #080d1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#svg-afd {
+    width: 100%;
+    height: 100%;
+    min-width: 780px;
+    min-height: 450px;
+}
+
+/* Nós do Grafo SVG */
+.estado-node {
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.circulo-base {
+    fill: #1e293b;
+    stroke: #475569;
+    stroke-width: 2.2;
+    transition: all 0.25s ease;
+}
+
+.circulo-duplo {
+    fill: none;
+    stroke: #475569;
+    stroke-width: 1.8;
+}
+
+.estado-id {
+    fill: #f8fafc;
+    font-size: 11px;
+    font-weight: 800;
+    text-anchor: middle;
+    font-family: var(--font-mono);
+}
+
+.estado-desc {
+    fill: #94a3b8;
+    font-size: 8.5px;
+    text-anchor: middle;
+    font-family: var(--font-sans);
+}
+
+.seta-inicial {
+    stroke: #38bdf8;
+    stroke-width: 2.5;
+    fill: none;
+}
+
+/* Estados Ativos / Destacados */
+.estado-node.estado-ativo .circulo-base {
+    fill: #0369a1;
+    stroke: #38bdf8;
+    stroke-width: 3.5;
+    filter: url(#brilho);
+}
+
+.estado-node.estado-reconhecido .circulo-base {
+    fill: #065f46;
+    stroke: #34d399;
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.8));
+}
+
+.estado-node.estado-erro .circulo-base {
+    fill: #991b1b;
+    stroke: #f87171;
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 8px rgba(248, 113, 113, 0.8));
+}
+
+/* Arestas e Transições */
+.aresta-path {
+    fill: none;
+    stroke: #475569;
+    stroke-width: 1.5;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.aresta-texto {
+    fill: #94a3b8;
+    font-size: 8.5px;
+    text-anchor: middle;
+    font-family: var(--font-mono);
+}
+
+.aresta-group.aresta-ativa .aresta-path {
+    stroke: #38bdf8;
+    stroke-width: 3;
+    marker-end: url(#seta-ativa);
+}
+
+.aresta-group.aresta-ativa .aresta-texto {
+    fill: #38bdf8;
+    font-weight: bold;
 }
