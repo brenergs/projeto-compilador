@@ -1,45 +1,72 @@
 # UNIVERSIDADE ESTADUAL DO SUDOESTE DA BAHIA – UESB
 ## Departamento de Ciências Exatas – DCET
 ### Curso: Ciência da Computação | Disciplina: Compiladores
-**Trabalho Prático da I e II Unidades: Analisador Léxico (AFD) e Analisador Sintático SLR(1) (Mini_Pascal / Sigma)**
+**Trabalho Prático da I e II Unidades: Analisador Léxico (AFD) e Analisador Sintático SLR(1) (Linguagem Sigma)**
 
 ---
 
 ## 1. Visão Geral do Projeto
 
-Este projeto implementa o **Analisador Léxico** (baseado em Autômato Finito Determinístico - AFD) e o **Analisador Sintático Ascendente SLR(1)** para a linguagem **Sigma**, além da construção da **Tabela de Símbolos** e rastreamento passo a passo da pilha sintática.
+Este projeto integra o desenvolvimento do **Analisador Léxico** (baseado em Autômato Finito Determinístico - AFD) e do **Analisador Sintático Ascendente SLR(1)** para a linguagem **Sigma**, complementado por uma **Tabela de Símbolos**, rastreamento passo a passo da pilha sintática e um **Simulador Visual Interativo do AFD fundamentado em conceitos de IHC (Interação Humano-Computador)**.
 
-O sistema foi desenvolvido utilizando **HTML5, Vanilla CSS e Vanilla JavaScript** puros, atendendo plenamente à exigência de **execução direta sem necessidade de compilação, instalação de dependências ou frameworks adicionais**.
+A aplicação foi construída com tecnologias web puras (**HTML5, Vanilla CSS e Vanilla JavaScript**), sem frameworks ou dependências externas, garantindo **execução direta em qualquer navegador sem necessidade de compilação ou configuração de ambiente**.
 
 ---
 
 ## 2. Instruções de Instalação e Execução
 
 ### Modo 1: Execução Direta no Navegador (Recomendado)
-Como o projeto foi concebido em tecnologias web nativas:
-1. Abra a pasta do projeto no explorador de arquivos do Windows.
-2. Dê um duplo clique no arquivo [`index.html`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/index.html).
-3. O projeto será executado instantaneamente no seu navegador padrão (Google Chrome, Microsoft Edge, Firefox, etc.), pronto para uso.
+1. Abra a pasta do projeto no explorador de arquivos.
+2. Dê um duplo clique no arquivo [`index.html`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/index.html).
+3. O projeto será executado instantaneamente no navegador web, pronto para uso.
+4. **Layout Viewport-Fit (100vh):** Toda a aplicação se ajusta à tela sem necessidade de scroll vertical global na página principal.
 
 ### Modo 2: Execução via Linha de Comando (Node.js - Opcional)
-O módulo [`lexer.js`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/lexer.js) foi projetado para ser universal (isomórfico). Para testar via terminal com Node.js:
+Os módulos [`lexer.js`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/lexer.js) e [`parser.js`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/parser.js) são universais (isomórficos):
 ```bash
-node -e "const { AnalisadorLexico } = require('./lexer.js'); const fs = require('fs'); const lexer = new AnalisadorLexico(fs.readFileSync('exemplos_teste/teste1_exemplo_documento.txt', 'utf8')); console.log(lexer.executar().tokens);"
+# Análise Léxica via Terminal
+node -e "const { AnalisadorLexico } = require('./lexer.js'); const fs = require('fs'); const lexer = new AnalisadorLexico(fs.readFileSync('exemplos_teste/teste1_programa_completo.txt', 'utf8')); console.log(lexer.executar().tokens);"
+
+# Análise Sintática SLR(1) via Terminal
+node -e "const fs = require('fs'); const { AnalisadorLexico } = require('./lexer.js'); const { AnalisadorSintatico } = require('./parser.js'); const tokens = new AnalisadorLexico(fs.readFileSync('exemplos_teste/teste1_programa_completo.txt', 'utf8')).executar().tokens; console.log(new AnalisadorSintatico().analisar(tokens));"
 ```
 
 ---
 
-## 3. Especificação do Autômato Finito Determinístico (AFD)
+## 3. Funcionalidades da Interface
+
+A interface foi projetada seguindo as Heurísticas de Usabilidade de Nielsen (visibilidade do estado do sistema, controle do usuário e correspondência com o modelo mental do domínio):
+
+1. **Header com Ações Diretas:**
+   - Botão **`📖 Especificações`**: abre um modal popup com as especificações formais da linguagem Sigma, estados do autômato e regras gramaticais.
+   - Botão **`⚙️ Simulador AFD`**: atalho direto no cabeçalho para abrir o simulador do autômato a qualquer momento.
+2. **Painel de Métricas Rápidas:**
+   - Exibição de *Tokens Reconhecidos*, *Erros Léxicos*, *Status Sintático (ACEITO / ERRO)*, *Símbolos Declarados*, *Linhas de Código* e *Tempo de Análise (ms)*.
+3. **Editor de Código Fonte:**
+   - Numeração dinâmica de linhas sincronizada com scroll, seletor de programas pré-definidos, botão de upload `.txt`/`.pas`, botão de limpar e execução de análise.
+4. **Painel de Resultados com Abas Lado a Lado:**
+   - **Sintático SLR(1):** tabela com rastreamento completo da pilha de estados, pilha de símbolos, entrada restante e ação realizada (*Shift*, *Reduce*, *Accept* ou *Error*).
+   - **Tabela de Símbolos:** visualização das variáveis declaradas com categoria, tipo (`integer`/`boolean`), linha e coluna, além de alertas semânticos de redeclaração ou variável não declarada.
+   - **Tokens:** tabela com lexema, categoria do token, linha e coluna.
+   - **Texto .txt:** saída pura colunar e botão `💾 Baixar saída .txt` para exportação no formato `<cadeia, token>`.
+5. **Simulador Visual do AFD (Popup Interativo):**
+   - Acessível pelo **botão flutuante no canto inferior esquerdo** ou pelo botão no header.
+   - **Pan & Zoom Dinâmico:** liberdade total de movimentação com clique e arraste do mouse (`grab`/`grabbing`), zoom contínuo pela roda do scroll (`wheel`) e botões de zoom `+`, `−` e `⟲ Reset`.
+   - **Controles de Reprodução:** `⏮ Início`, `◀ Passo`, `▶ Play / ⏸ Pause`, `Passo ▶` e seletor de velocidade (100ms a 1200ms).
+   - **HUD de Feedback:** exibição do passo atual, caractere consumido (`␣`, `\n`, `\t`), lexema parcial acumulado, estado atual com iluminação colorida e descrição explicativa de cada transição.
+
+---
+
+## 4. Especificação do Autômato Finito Determinístico (AFD Léxico)
 
 O analisador léxico opera formalmente como uma 5-tupla $M = (\Sigma, Q, \delta, q_0, F)$:
-
-- $\Sigma$: Alfabeto de entrada (conjunto de caracteres ASCII válidos).
-- $Q$: Conjunto de estados $\{S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9, S_{10}, S_{11}, S_{12}, S_{13}, S_{14}, S_{15}, S_{16}\}$.
+- $\Sigma$: Alfabeto de entrada (caracteres ASCII válidos).
+- $Q$: Conjunto de 17 estados $\{S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9, S_{10}, S_{11}, S_{12}, S_{13}, S_{14}, S_{15}, S_{16}\}$.
 - $q_0$: Estado inicial ($S_0$).
-- $\delta$: Função de transição de estados ($Q \times \Sigma \rightarrow Q$).
-- $F$: Conjunto de estados de aceitação / reconhecimento de tokens.
+- $\delta$: Função determinística de transição ($Q \times \Sigma \rightarrow Q$).
+- $F$: Estados de aceitação/reconhecimento (com tratamento e descarte transparente de comentários de bloco `/* ... */`).
 
-### Tabela de Transições do Autômato
+### Tabela de Transições do Autômato Léxico
 
 | Estado Atual | Entrada | Próximo Estado | Ação / Token Gerado |
 |---|---|---|---|
@@ -57,7 +84,7 @@ O analisador léxico opera formalmente como uma 5-tupla $M = (\Sigma, Q, \delta,
 | **$S_0$ (Início)** | `"` | $S_{14}$ | Inicia constante string |
 | **$S_0$ (Início)** | `'` | $S_{15}$ | Inicia constante caractere |
 | **$S_1$ (Ident)** | `[a-zA-Z0-9_]` | $S_1$ | Continua acumulando lexema |
-| **$S_1$ (Ident)** | Outro caractere | Retorna | Consulta tabela: `Palavra reservada`, `Operador lógico`, `Operador aritmético` ou `Identificador` |
+| **$S_1$ (Ident)** | Outro caractere | Retorna | Consulta tabela $O(1)$: `Palavra reservada`, `Operador lógico`, `Operador aritmético` ou `Identificador` |
 | **$S_2$ (Int)** | `[0-9]` | $S_2$ | Continua acumulando dígitos inteiros |
 | **$S_2$ (Int)** | `.` seguido de `[0-9]` | $S_4$ | Transita para parte fracionária |
 | **$S_2$ (Int)** | `e` ou `E` | $S_5$ | Transita para notação científica |
@@ -90,82 +117,47 @@ O analisador léxico opera formalmente como uma 5-tupla $M = (\Sigma, Q, \delta,
 
 ---
 
-## 4. Respostas às Decisões de Projeto
+## 5. Especificação do Analisador Sintático SLR(1)
 
-### a) Vai existir um limite para o tamanho dos identificadores?
-> **Decisão:** Não há limite arbitrário curto rígido imposto ao tamanho dos identificadores. Eles podem ter qualquer extensão suportada pela memória, iniciando obrigatoriamente por letra ou caractere sublinhado `_`, seguido por letras, números e sublinhados (`[a-zA-Z_][a-zA-Z0-9_]*`). Isso oferece total conformidade e robustez para projetos complexos.
-
-### b) Quais os tokens para as cadeias: `<palavra_reservada, palavra_reservada>` ou `<palavra_reservada, t_palavra_reservada>`?
-> **Decisão:** Adotou-se o padrão nominal descritivo conforme explicitado no exemplo de execução do documento (páginas 3 e 4). Cada token pertence à sua respectiva categoria nominal:
-> - `Palavra reservada`
-> - `Identificador`
-> - `Número inteiro`
-> - `Número real`
-> - `Operador aritmético`
-> - `Operador relacional`
-> - `Operador lógico`
-> - `Símbolo especial`
-> - `Atribuição`
-> - `Constante caractere`
-> - `Constante string`
-> - `Fim`
-> 
-> Na saída em arquivo texto, o analisador gera os pares no formato `<cadeia, token>`, como `<program, Palavra reservada>` e `<:=, Atribuição>`, sem o uso de códigos numéricos opacos.
-
-### c) Como implementar a tabela de palavras reservadas / símbolos?
-> **Decisão (Opção A):** Foi implementada uma tabela dedicada para as palavras reservadas utilizando a estrutura `Set` com busca em tempo constante **$O(1)$** por hash. A tabela é instanciada na inicialização do analisador e contém todas as palavras reservadas especificadas no documento (em maiúsculas para busca *case-insensitive*):
-> ```javascript
-> const PALAVRAS_RESERVADAS = new Set([
->     "ABSOLUTE", "ARRAY", "BEGIN", "CASE", "CHAR", "CONST", "DIV", "DO", 
->     "DOWTO", "ELSE", "END", "EXTERNAL", "FILE", "FOR", "FORWARD", "FUNC", 
->     "FUNCTION", "GOTO", "IF", "IMPLEMENTATION", "INTEGER", "INTERFACE", 
->     "INTERRUPT", "LABEL", "MAIN", "NIL", "NIT", "OF", "PACKED", "PROC", 
->     "PROGRAM", "REAL", "RECORD", "REPEAT", "SET", "SHL", "SHR", "STRING", 
->     "THEN", "TO", "TYPE", "UNIT", "UNTIL", "USES", "VAR", "WHILE", 
->     "WITH", "XOR"
-> ]);
-> ```
-> O autômato primeiro extrai a cadeia completa no estado `S1` e em seguida faz a consulta imediata $O(1)$. Se pertencer ao conjunto, classifica como `Palavra reservada`; caso contrário, classifica como `Identificador`.
-
-### d) As informações que ficarão na tabela de símbolos serão inseridas pelo analisador léxico ou sintático?
-> **Decisão:** Na arquitetura clássica recomendada para a etapa seguinte (SLR(1) na II Unidade), o **analisador léxico** tem como função exclusiva reconhecer os tokens e seus atributos básicos (lexema, tipo, linha e coluna). A inserção com tipagem semântica, escopo de bloco e endereço de memória é de responsabilidade primária do **analisador sintático e semântico**, evitando poluição precoce da tabela de símbolos com identificadores temporários em trechos com erro de sintaxe.
-
-### e) Como serão tratados os erros léxicos? Especifique que estratégias de correção serão adotadas.
-> **Decisão:** O analisador adota a **estratégia de recuperação em modo pânico léxico com relatório descritivo**:
-> 1. Quando um caractere não reconhecido pelo AFD é lido (ex: `&`, `@`, `#`), o analisador registra um objeto de erro com a descrição, lexema inválido, número exato da linha e número da coluna.
-> 2. O caractere espúrio é consumido e o autômato retorna imediatamente ao estado inicial $S_0$.
-> 3. Isso impede que um único caractere inválido interrompa abruptamente a análise do restante do código-fonte, permitindo ao desenvolvedor visualizar todos os erros do arquivo em uma única execução.
-> 4. Casos como strings ou comentários não fechados antes do fim de linha ou EOF também são detectados e devidamente sinalizados com mensagem clara ao usuário.
+O módulo [`parser.js`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/parser.js) implementa um analisador ascendente determinístico baseado na técnica **Simple LR(1)**:
+- **Coleção Canônica LR(0):** 105 estados gerados dinamicamente via cálculo de `closure()` e `gotoItens()`.
+- **Tabelas ACTION e GOTO:** preenchidas com auxílio dos conjuntos `FOLLOW`. A gramática foi refatorada para possuir **0 conflitos Shift/Reduce ou Reduce/Reduce**.
+- **Resolução de Ambiguidades Gramaticais:**
+  - Expressões aritméticas estratificadas em `E`, `Term` e `Fat` garantindo precedência (`*`, `/` > `+`, `-`, unário `-`) e associatividade à esquerda.
+  - Resolução do *dangling-else* através da divisão de comandos em fechados (`C_fechado`) e abertos (`C_aberto`), associando todo `else` ao `if` mais próximo.
+  - Eliminação de conflitos em expressões booleanas com parênteses (`if (x > y) then`) via unificação em `B -> E relop E | E` e `Fat -> ( B )`.
+- **Diagnóstico Descritivo de Erros:** quando o autômato encontra um token inesperado, a análise aponta linha, coluna, lexema lido e a lista exata de terminais esperados naquele estado da tabela ACTION.
 
 ---
 
-## 5. Relação dos Arquivos de Teste
+## 6. Relação dos Arquivos de Teste
 
-O projeto inclui um diretório [`exemplos_teste/`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/) com 6 arquivos de teste para a linguagem Sigma:
+A pasta [`exemplos_teste/`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/) contém 6 programas que cobrem exaustivamente as produções da linguagem Sigma:
 
-1. **[`teste1_programa_completo.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste1_programa_completo.txt)**: Programa completo com declarações (`integer`, `boolean`), `read`, atribuições, `if-then-else`, `write` e `writeln`.
-2. **[`teste2_while_composto.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste2_while_composto.txt)**: Laço `while`, comandos compostos `begin ... end`, `readln(limite)` e expressões aritméticas.
-3. **[`teste3_sem_declaracoes.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste3_sem_declaracoes.txt)**: Programa válido sem bloco `var`, `readln` sem argumentos e expressões com parênteses e operador unário `-`.
-4. **[`teste4_dangling_else_relacionais.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste4_dangling_else_relacionais.txt)**: Condicionais aninhadas (*dangling-else*), todos os operadores relacionais (`<`, `<=`, `>`, `>=`, `=`, `<>`) e condição booleana simples (`if flag then`).
-5. **[`teste5_erros_sintaticos.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste5_erros_sintaticos.txt)**: Teste com erros sintáticos propositais para validar a rejeição SLR(1) e mensagens explicativas com tokens esperados.
-6. **[`teste6_erros_lexicos.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste6_erros_lexicos.txt)**: Teste com erros léxicos (`&`, `@`, `#`, string não fechada).
+1. **[`teste1_programa_completo.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste1_programa_completo.txt)**: Programa completo com declarações (`integer`, `boolean`), leitura `read(x)`, atribuição, condicional `if-then-else`, escrita `write` e `writeln`.
+2. **[`teste2_while_composto.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste2_while_composto.txt)**: Laço `while` com bloco composto `begin ... end`, leitura com `readln(limite)` e acumulador aritmético.
+3. **[`teste3_sem_declaracoes.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste3_sem_declaracoes.txt)**: Programa válido sem seção de variáveis `var` (segunda produção de `S`), chamada de `readln` sem parâmetros e expressões aritméticas com parênteses e operador unário `-`.
+4. **[`teste4_dangling_else_relacionais.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste4_dangling_else_relacionais.txt)**: Condicionais aninhadas (*dangling-else*), todos os operadores relacionais (`<`, `<=`, `>`, `>=`, `=`, `<>`) e teste com variável booleana direta.
+5. **[`teste5_erros_sintaticos.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste5_erros_sintaticos.txt)**: Código com erros sintáticos propositais (expressão incompleta `10 + ;`, ausência de `then` e delimitador final faltante), validando a rejeição pelo autômato SLR(1) com mensagem explicativa.
+6. **[`teste6_erros_lexicos.txt`](file:///c:/Users/Brener/Documents/projetos/projeto-compilador/projeto-compilador/exemplos_teste/teste6_erros_lexicos.txt)**: Código com símbolos inválidos (`&`, `@`, `#`) e string não fechada para testar a resiliência léxica.
 
 ---
 
-## 6. Estrutura do Código-Fonte
+## 7. Estrutura do Código-Fonte
 
 ```
 projeto-compilador/
 │
-├── index.html                   # Interface gráfica web amigável (executável direto)
-├── style.css                    # Folha de estilos moderna (Vanilla CSS)
-├── lexer.js                     # Motor léxico baseado no AFD (ricamente comentado)
-├── parser.js                    # Analisador Sintático SLR(1) + Tabela de Símbolos
-├── app.js                       # Controlador da interface e manipulação de arquivos
-├── README.md                    # Visão geral do projeto
-├── DOCUMENTACAO_II_UNIDADE.md   # Documentação em formato de artigo (II Unidade)
+├── index.html                   # Interface gráfica web responsiva (viewport-fit 100vh)
+├── style.css                    # Estilos modernos em Vanilla CSS com suporte a modais e grafo SVG
+├── lexer.js                     # Analisador Léxico baseado em AFD e gerador de passos de simulação
+├── simulador_afd.js             # Módulo SVG interativo do AFD com Pan & Zoom e HUD de IHC
+├── parser.js                    # Analisador Sintático SLR(1), Coleção LR(0) e Tabela de Símbolos
+├── app.js                       # Controlador da interface, modais, eventos e execução
+├── README.md                    # Documentação geral do projeto
+├── DOCUMENTACAO_II_UNIDADE.md   # Artigo e relatório técnico completo da II Unidade
 │
-└── exemplos_teste/              # Arquivos .txt de teste exigidos na especificação
+└── exemplos_teste/              # Conjunto de programas de teste da linguagem Sigma
     ├── teste1_programa_completo.txt
     ├── teste2_while_composto.txt
     ├── teste3_sem_declaracoes.txt
