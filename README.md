@@ -90,7 +90,7 @@ O analisador léxico opera formalmente como uma 5-tupla $M = (\Sigma, Q, \delta,
 
 ---
 
-## 4. Respostas às Decisões de Projeto (Conforme Roteiro UESB)
+## 4. Respostas às Decisões de Projeto
 
 ### a) Vai existir um limite para o tamanho dos identificadores?
 > **Decisão:** Não há limite arbitrário curto rígido imposto ao tamanho dos identificadores. Eles podem ter qualquer extensão suportada pela memória, iniciando obrigatoriamente por letra ou caractere sublinhado `_`, seguido por letras, números e sublinhados (`[a-zA-Z_][a-zA-Z0-9_]*`). Isso oferece total conformidade e robustez para projetos complexos.
