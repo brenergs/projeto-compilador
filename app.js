@@ -1,108 +1,84 @@
 /**
  * ============================================================================
  * UNIVERSIDADE ESTADUAL DO SUDOESTE DA BAHIA - UESB
- * Aplicação Web do Analisador Léxico - Mini_Pascal
+ * Aplicação Web do Analisador Léxico (AFD) e Sintático SLR(1) - Linguagem Sigma
  * Controlador da Interface (Vanilla JavaScript)
  * ============================================================================
  */
 
-// Exemplos pré-carregados para facilitar o teste imediato
+// Exemplos pré-carregados na linguagem Sigma para facilitar o teste imediato
 const EXEMPLOS = {
     teste1: `program teste;
-var x,y: integer;
-const pi := 3.1416;
-/* inicio do programa */
+var x, y: integer;
+    ativo: boolean;
+/* inicio do programa Sigma */
 begin
-read(x);
-if (x > y) then
-y := x ;
-else
-y := -x;
-writeln(x);
-write(y);
+    read(x);
+    y := -x + 10 * 2;
+    if (x > y) then
+        y := x
+    else
+        y := -x;
+    writeln("Resultado y = ", y);
+    write(x);
 end.`,
 
-    teste2: `/* Outro exemplo de programa */
-Program Piloto;
- /* declarações de variáveis e constantes globais */
- var cont, total: integer ;
-Nota1, Nota2, Media_das_medias, med: real;
-/* Inicio do Programa */
+    teste2: `program LacowhileComposto;
+var i, limite, soma: integer;
+/* Teste de laço while e comandos compostos */
 begin
-media_das_medias := 0;
-writeln("******** ENTRADA DE DADOS ***************");
-writeln("Digite o total de alunos");
-read(total);
-for cont=1 to total do
-begin
-writeln("Digite os valores da primeira nota do aluno ", cont);
-read(Nota1);
-writeln("Digite os valores da segunda nota do aluno ", cont);
-read(Nota2);
-med := (Nota1+Nota2)/2.0;
-media_das_medias := media_das_medias + med;
-write("Media = ",med);
-end;
-write("Media Geral = ", Media_das_medias/total);
-end.`,
-
-    teste3: `program RepeticoesEOperadores;
-var
-    i, limite, resultado: integer;
-    ativo: integer;
-/* Teste de laços while e repeat com operadores relacionais e lógicos */
-begin
-    i := 0;
-    limite := 10;
-    
-    while (i <= limite) and not (i = 5) do
+    i := 1;
+    soma := 0;
+    write("Informe o limite: ");
+    readln(limite);
+    while i <= limite do
     begin
-        resultado := i mod 2;
-        if (resultado = 0) or (i >= 8) then
-            writeln("Par ou maior que oito: ", i);
+        soma := soma + i;
         i := i + 1;
     end;
-
-    repeat
-        i := i - 1;
-        write("Regredindo: ", i);
-    until (i <> 0);
+    writeln("Soma acumulada = ", soma);
 end.`,
 
-    teste4: `program TiposEConstantes;
-var
-    letra: char;
-    mensagem: string;
-    fator1, fator2, total: real;
-    expoente: real;
-/* Testando números reais exponenciais, caracteres e strings */
+    teste3: `program SemDeclaracoes;
+/* Programa válido sem bloco var (segunda produção de S) */
 begin
-    letra := 'A';
-    mensagem := "Processando calculos cientificos...";
-    writeln(mensagem);
-    
-    fator1 := 1.33;
-    fator2 := 24.40e-04;
-    expoente := 1.5e+02;
-    
-    total := (fator1 * fator2) / expoente;
-    writeln("Total calculado = ", total);
-    writeln("Caractere selecionado = ", letra);
+    writeln("Executando sem variaveis declaradas");
+    readln;
+    writeln((10 + 20) * -2 / 5);
 end.`,
 
-    teste5: `program TesteErrosLexicos;
-var
-    salario, taxa: real;
-    nome: string;
-    caractereInvalido: char;
+    teste4: `program DanglingElseERelacionais;
+var a, b: integer;
+    flag: boolean;
 begin
-    /* Testando caracteres desconhecidos e erros de formatacao */
-    salario := 1500.00;
-    taxa := 12.e;        /* Erro: expoente incompleto */
-    Mari& := 10;         /* Erro: símbolo '&' desconhecido */
-    nome := "String nao fechada nesta linha;
-    caractereInvalido := 'abc'; /* Erro: char com mais de 1 caractere */
-    valor@ := #50;       /* Erros: símbolos '@' e '#' desconhecidos */
+    read(a, b);
+    if a < b then
+        if a <= 0 then
+            writeln("a menor que b e nao positivo")
+        else
+            writeln("a menor que b e positivo");
+    if a <> b then
+        write("Diferentes");
+    if flag then
+        writeln("Flag booleana ativa");
+end.`,
+
+    teste5: `program TesteErrosSintaticos;
+var x, y: integer;
+begin
+    x := 10 + ;
+    if x > 5
+        writeln(x);
+end`,
+
+    teste6: `program TesteErrosLexicos;
+var salario: integer;
+begin
+    /* Testando caracteres desconhecidos e string não fechada */
+    salario := 1500;
+    Mari& := 10;
+    writeln("String nao fechada nesta linha;
+    valor@ := #50;
 end.`
 };
 
@@ -116,25 +92,163 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnUpload = document.getElementById("btn-upload");
     const btnBaixarTxt = document.getElementById("btn-baixar-txt");
     const selectExemplo = document.getElementById("select-exemplo");
-    
+
     // Elementos de contadores
     const contadorTokens = document.getElementById("stat-tokens");
     const contadorErros = document.getElementById("stat-erros");
+    const contadorSintatico = document.getElementById("stat-sintatico");
+    const cardStatSintatico = document.getElementById("card-stat-sintatico");
+    const contadorSimbolos = document.getElementById("stat-simbolos");
     const contadorLinhas = document.getElementById("stat-linhas");
     const contadorTempo = document.getElementById("stat-tempo");
 
     // Elementos de visualização de saída
     const corpoTabela = document.getElementById("corpo-tabela-tokens");
+    const corpoTabelaRastreamento = document.getElementById("corpo-tabela-rastreamento");
+    const corpoTabelaSimbolos = document.getElementById("corpo-tabela-simbolos");
+    const bannerSintatico = document.getElementById("banner-sintatico");
+    const listaAvisosSemanticos = document.getElementById("lista-avisos-semanticos");
     const areaTextoSaida = document.getElementById("saida-texto-formatado");
+
+    // Painéis de erro
     const secaoErros = document.getElementById("secao-erros");
     const listaErros = document.getElementById("lista-erros");
-    const tabTabela = document.getElementById("tab-tabela");
-    const tabTexto = document.getElementById("tab-texto");
-    const viewTabela = document.getElementById("view-tabela");
-    const viewTexto = document.getElementById("view-texto");
+    const secaoErrosSintaticos = document.getElementById("secao-erros-sintaticos");
+    const listaErrosSintaticos = document.getElementById("lista-erros-sintaticos");
+
+    // Abas de visualização de resultados
+    const abas = [
+        { btn: document.getElementById("tab-rastreamento"), view: document.getElementById("view-rastreamento") },
+        { btn: document.getElementById("tab-simbolos"), view: document.getElementById("view-simbolos") },
+        { btn: document.getElementById("tab-tabela"), view: document.getElementById("view-tabela") },
+        { btn: document.getElementById("tab-texto"), view: document.getElementById("view-texto") }
+    ];
 
     let tokensAtuais = [];
     let errosAtuais = [];
+
+    // Instância única do analisador sintático SLR(1) e do Simulador Visual do AFD
+    const parser = new AnalisadorSintatico();
+    const simuladorAFD = new SimuladorVisualAFD("svg-afd");
+
+    // Elementos do Modal Popup do Simulador AFD
+    const btnFlutuanteAFD = document.getElementById("btn-flutuante-afd");
+    const btnHeaderSimulador = document.getElementById("btn-header-simulador");
+    const modalSimuladorAFD = document.getElementById("modal-simulador-afd");
+    const btnFecharModalAFD = document.getElementById("btn-fechar-modal-afd");
+
+    // Elementos do Modal de Especificações
+    const btnAbrirEspecs = document.getElementById("btn-abrir-especs");
+    const modalEspecs = document.getElementById("modal-especs");
+    const btnFecharModalEspecs = document.getElementById("btn-fechar-modal-especs");
+
+    // Elementos da interface do Simulador AFD (dentro do modal)
+    const btnAfdInicio = document.getElementById("btn-afd-inicio");
+    const btnAfdAnt = document.getElementById("btn-afd-ant");
+    const btnAfdPlay = document.getElementById("btn-afd-play");
+    const btnAfdProx = document.getElementById("btn-afd-prox");
+    const rangeAfdVel = document.getElementById("range-afd-vel");
+    const labelAfdVel = document.getElementById("label-afd-vel");
+
+    // Controles de Zoom e Pan
+    const btnZoomMenos = document.getElementById("btn-zoom-menos");
+    const btnZoomMais = document.getElementById("btn-zoom-mais");
+    const btnZoomReset = document.getElementById("btn-zoom-reset");
+    const labelZoomNivel = document.getElementById("label-zoom-nivel");
+
+    const hudAfdPasso = document.getElementById("afd-hud-passo");
+    const hudAfdChar = document.getElementById("afd-hud-char");
+    const hudAfdLexema = document.getElementById("afd-hud-lexema");
+    const hudAfdEstado = document.getElementById("afd-hud-estado");
+    const hudAfdMsg = document.getElementById("afd-hud-msg");
+
+    // Controle de abertura e fechamento do Modal do Simulador
+    function abrirModalAFD() {
+        modalSimuladorAFD.classList.remove("oculto");
+        simuladorAFD.atualizarVisualizacao();
+    }
+
+    function fecharModalAFD() {
+        modalSimuladorAFD.classList.add("oculto");
+        simuladorAFD.pausar();
+    }
+
+    if (btnFlutuanteAFD) btnFlutuanteAFD.addEventListener("click", abrirModalAFD);
+    if (btnHeaderSimulador) btnHeaderSimulador.addEventListener("click", abrirModalAFD);
+    if (btnFecharModalAFD) btnFecharModalAFD.addEventListener("click", fecharModalAFD);
+
+    // Controle de abertura e fechamento do Modal de Especificações
+    function abrirModalEspecs() {
+        modalEspecs.classList.remove("oculto");
+    }
+
+    function fecharModalEspecs() {
+        modalEspecs.classList.add("oculto");
+    }
+
+    if (btnAbrirEspecs) btnAbrirEspecs.addEventListener("click", abrirModalEspecs);
+    if (btnFecharModalEspecs) btnFecharModalEspecs.addEventListener("click", fecharModalEspecs);
+
+    // Fechar modais ao clicar fora do conteúdo (overlay) ou via tecla Escape
+    modalSimuladorAFD.addEventListener("click", (e) => {
+        if (e.target === modalSimuladorAFD) {
+            fecharModalAFD();
+        }
+    });
+
+    modalEspecs.addEventListener("click", (e) => {
+        if (e.target === modalEspecs) {
+            fecharModalEspecs();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            if (!modalSimuladorAFD.classList.contains("oculto")) fecharModalAFD();
+            if (!modalEspecs.classList.contains("oculto")) fecharModalEspecs();
+        }
+    });
+
+    // Eventos de feedback de Zoom
+    simuladorAFD.onZoomMudou = (nivelZoom) => {
+        if (labelZoomNivel) labelZoomNivel.textContent = `${nivelZoom}%`;
+    };
+
+    if (btnZoomMais) btnZoomMais.addEventListener("click", () => simuladorAFD.zoomMais());
+    if (btnZoomMenos) btnZoomMenos.addEventListener("click", () => simuladorAFD.zoomMenos());
+    if (btnZoomReset) btnZoomReset.addEventListener("click", () => simuladorAFD.resetarZoom());
+
+    // Eventos de feedback do simulador para o HUD
+    simuladorAFD.onPassoMudou = (passo, indice, total) => {
+        hudAfdPasso.textContent = `${indice + 1} / ${total}`;
+        hudAfdChar.textContent = passo.charLido || "EOF";
+        hudAfdLexema.textContent = passo.lexema || "(vazio)";
+        hudAfdEstado.textContent = `S${passo.estadoDestino}`;
+        hudAfdMsg.textContent = `[Passo ${indice + 1}] ${passo.descricao}`;
+    };
+
+    simuladorAFD.onStatusExecucao = (emExecucao) => {
+        btnAfdPlay.textContent = emExecucao ? "⏸ Pause" : "▶ Play";
+        btnAfdPlay.classList.toggle("btn-secondary", emExecucao);
+        btnAfdPlay.classList.toggle("btn-primary", !emExecucao);
+    };
+
+    btnAfdInicio.addEventListener("click", () => simuladorAFD.irParaInicio());
+    btnAfdAnt.addEventListener("click", () => simuladorAFD.anterior());
+    btnAfdProx.addEventListener("click", () => simuladorAFD.proximo());
+    btnAfdPlay.addEventListener("click", () => {
+        if (simuladorAFD.emExecucao) {
+            simuladorAFD.pausar();
+        } else {
+            simuladorAFD.reproduzir();
+        }
+    });
+
+    rangeAfdVel.addEventListener("input", (e) => {
+        const vel = parseInt(e.target.value, 10);
+        labelAfdVel.textContent = `${vel}ms`;
+        simuladorAFD.setVelocidade(vel);
+    });
 
     // ------------------------------------------------------------------------
     // Sincronização de numeração de linha do editor
@@ -155,6 +269,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ------------------------------------------------------------------------
+    // Alternância entre abas de resultado
+    // ------------------------------------------------------------------------
+    abas.forEach((abaSelecionada) => {
+        abaSelecionada.btn.addEventListener("click", () => {
+            abas.forEach((a) => {
+                const ativa = a === abaSelecionada;
+                a.btn.classList.toggle("active", ativa);
+                a.view.classList.toggle("oculto", !ativa);
+            });
+        });
+    });
+
+    // ------------------------------------------------------------------------
     // Carregamento de Exemplos
     // ------------------------------------------------------------------------
     selectExemplo.addEventListener("change", (e) => {
@@ -167,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ------------------------------------------------------------------------
-    // Upload de Arquivo .txt
+    // Upload de Arquivo .txt / .pas
     // ------------------------------------------------------------------------
     btnUpload.addEventListener("click", () => inputArquivo.click());
 
@@ -180,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
             editor.value = event.target.result;
             atualizarNumerosLinha();
             executarAnalise();
-            inputArquivo.value = ""; // reset
+            inputArquivo.value = "";
         };
         reader.readAsText(file);
     });
@@ -192,57 +319,64 @@ document.addEventListener("DOMContentLoaded", () => {
         editor.value = "";
         tokensAtuais = [];
         errosAtuais = [];
+        simuladorAFD.carregarPassos([]);
+        hudAfdPasso.textContent = "0 / 0";
+        hudAfdChar.textContent = "-";
+        hudAfdLexema.textContent = "-";
+        hudAfdEstado.textContent = "S0";
+        hudAfdMsg.textContent = "Editor limpo. Carregue um código para simular o AFD.";
         atualizarNumerosLinha();
-        renderizarResultados([], []);
+        renderizarResultados([], [], null);
         contadorTokens.textContent = "0";
         contadorErros.textContent = "0";
+        contadorSintatico.textContent = "-";
+        cardStatSintatico.classList.remove("stat-ok", "stat-erro-sintatico");
+        contadorSimbolos.textContent = "0";
         contadorTempo.textContent = "0ms";
     });
 
     // ------------------------------------------------------------------------
-    // Alternância entre visualização em Tabela e Texto
-    // ------------------------------------------------------------------------
-    tabTabela.addEventListener("click", () => {
-        tabTabela.classList.add("active");
-        tabTexto.classList.remove("active");
-        viewTabela.classList.remove("oculto");
-        viewTexto.classList.add("oculto");
-    });
-
-    tabTexto.addEventListener("click", () => {
-        tabTexto.classList.add("active");
-        tabTabela.classList.remove("active");
-        viewTexto.classList.remove("oculto");
-        viewTabela.classList.add("oculto");
-    });
-
-    // ------------------------------------------------------------------------
-    // Execução da Análise Léxica
+    // Execução da Análise Léxica + Sintática SLR(1)
     // ------------------------------------------------------------------------
     function executarAnalise() {
         const codigo = editor.value;
         if (!codigo.trim()) {
-            renderizarResultados([], []);
+            simuladorAFD.carregarPassos([]);
+            renderizarResultados([], [], null);
             contadorTokens.textContent = "0";
             contadorErros.textContent = "0";
+            contadorSintatico.textContent = "-";
+            cardStatSintatico.classList.remove("stat-ok", "stat-erro-sintatico");
+            contadorSimbolos.textContent = "0";
             contadorTempo.textContent = "0ms";
             return;
         }
 
         const tInicio = performance.now();
         const lexer = new AnalisadorLexico(codigo);
-        const resultado = lexer.executar();
+        const resultadoLexico = lexer.executar();
+        const passosAFD = lexer.gerarSimulacaoAFD();
+        const resultadoSintatico = parser.analisar(resultadoLexico.tokens);
         const tFim = performance.now();
 
-        tokensAtuais = resultado.tokens;
-        errosAtuais = resultado.erros;
+        // Carrega o histórico de passos no simulador visual
+        simuladorAFD.carregarPassos(passosAFD);
+
+        tokensAtuais = resultadoLexico.tokens;
+        errosAtuais = resultadoLexico.erros;
 
         const duracao = (tFim - tInicio).toFixed(1);
         contadorTempo.textContent = `${duracao}ms`;
         contadorTokens.textContent = tokensAtuais.filter(t => t.token !== TIPO_TOKEN.ERRO).length;
         contadorErros.textContent = errosAtuais.length;
+        contadorSimbolos.textContent = resultadoSintatico.tabelaSimbolos.length;
 
-        renderizarResultados(tokensAtuais, errosAtuais);
+        const valido = resultadoSintatico.aceito && errosAtuais.length === 0;
+        contadorSintatico.textContent = valido ? "ACEITO" : "ERRO";
+        cardStatSintatico.classList.toggle("stat-ok", valido);
+        cardStatSintatico.classList.toggle("stat-erro-sintatico", !valido);
+
+        renderizarResultados(tokensAtuais, errosAtuais, resultadoSintatico);
     }
 
     btnAnalisar.addEventListener("click", executarAnalise);
@@ -250,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------------------------------------------------
     // Renderização dos Resultados na Interface
     // ------------------------------------------------------------------------
-    function renderizarResultados(tokens, erros) {
+    function renderizarResultados(tokens, erros, sintatico) {
         // 1. Tabela de Tokens
         corpoTabela.innerHTML = "";
         if (tokens.length === 0) {
@@ -261,10 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (t.token === TIPO_TOKEN.ERRO) {
                     tr.classList.add("linha-erro");
                 }
-
-                // Criação da badge de estilo para a categoria do token
                 const badgeClass = obterClasseBadge(t.token);
-
                 tr.innerHTML = `
                     <td class="col-num">${index + 1}</td>
                     <td class="col-lexema"><code>${escaparHtml(t.lexema)}</code></td>
@@ -276,11 +407,10 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // 2. Formato em Texto (Conforme especificação: par <cadeia, token> por linha e no modelo do exemplo)
+        // 2. Formato em Texto <cadeia, token>
         let textoSaida = "";
         tokens.forEach(t => {
             if (t.token !== TIPO_TOKEN.ERRO) {
-                // Formato exigido no documento: "<cadeia, token>" ou formato colunar "lexema Token"
                 textoSaida += `${t.lexema} ${t.token}\n`;
             } else {
                 textoSaida += `/* ERRO LÉXICO: ${t.lexema} (Linha ${t.linha}, Coluna ${t.coluna}): ${t.mensagem} */\n`;
@@ -304,6 +434,104 @@ document.addEventListener("DOMContentLoaded", () => {
             secaoErros.classList.add("oculto");
             listaErros.innerHTML = "";
         }
+
+        // 4. Rastreamento SLR(1), Tabela de Símbolos e Erros Sintáticos
+        if (!sintatico) {
+            bannerSintatico.classList.add("oculto");
+            corpoTabelaRastreamento.innerHTML = `<tr><td colspan="5" class="tabela-vazia">Execute a análise para visualizar o rastreamento SLR(1).</td></tr>`;
+            corpoTabelaSimbolos.innerHTML = `<tr><td colspan="6" class="tabela-vazia">Nenhum símbolo declarado ainda.</td></tr>`;
+            listaAvisosSemanticos.classList.add("oculto");
+            secaoErrosSintaticos.classList.add("oculto");
+            return;
+        }
+
+        // Banner de status sintático
+        bannerSintatico.classList.remove("oculto", "banner-aceito", "banner-erro");
+        if (sintatico.aceito && erros.length === 0) {
+            bannerSintatico.classList.add("banner-aceito");
+            bannerSintatico.innerHTML = `
+                <span>✅ Programa sintaticamente VÁLIDO na linguagem Sigma (SLR(1))</span>
+                <span>${sintatico.estatisticas.passosAnalise} passos &bull; ${sintatico.estatisticas.estadosLR0} estados LR(0) &bull; ${sintatico.estatisticas.conflitosSLR1} conflitos</span>
+            `;
+        } else if (sintatico.aceito && erros.length > 0) {
+            bannerSintatico.classList.add("banner-erro");
+            bannerSintatico.innerHTML = `
+                <span>⚠️ Atenção: análise sintática prosseguiu ignorando erros léxicos; corrija os erros léxicos abaixo.</span>
+                <span>${sintatico.estatisticas.passosAnalise} passos</span>
+            `;
+        } else {
+            bannerSintatico.classList.add("banner-erro");
+            bannerSintatico.innerHTML = `
+                <span>🛑 Programa com ERRO SINTÁTICO (rejeitado pelo autômato SLR(1))</span>
+                <span>${sintatico.estatisticas.passosAnalise} passos</span>
+            `;
+        }
+
+        // Tabela de Rastreamento SLR(1)
+        corpoTabelaRastreamento.innerHTML = "";
+        sintatico.rastreamento.forEach((r) => {
+            const tr = document.createElement("tr");
+            if (r.acao.startsWith("ERRO")) {
+                tr.classList.add("linha-erro");
+            }
+            tr.innerHTML = `
+                <td class="col-num">${r.passo}</td>
+                <td title="${escaparHtml(r.pilhaEstados)}">${escaparHtml(r.pilhaEstados)}</td>
+                <td title="${escaparHtml(r.pilhaSimbolos)}">${escaparHtml(r.pilhaSimbolos)}</td>
+                <td title="${escaparHtml(r.entrada)}">${escaparHtml(r.entrada)}</td>
+                <td title="${escaparHtml(r.acao)}">${escaparHtml(r.acao)}</td>
+            `;
+            corpoTabelaRastreamento.appendChild(tr);
+        });
+
+        // Tabela de Símbolos
+        corpoTabelaSimbolos.innerHTML = "";
+        if (sintatico.tabelaSimbolos.length === 0) {
+            corpoTabelaSimbolos.innerHTML = `<tr><td colspan="6" class="tabela-vazia">Nenhum símbolo declarado neste programa.</td></tr>`;
+        } else {
+            sintatico.tabelaSimbolos.forEach((s, idx) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="col-num">${idx + 1}</td>
+                    <td class="col-lexema"><code>${escaparHtml(s.nome)}</code></td>
+                    <td><span class="badge badge-palavra">${escaparHtml(s.categoria)}</span></td>
+                    <td><code>${escaparHtml(s.tipo)}</code></td>
+                    <td class="col-pos">${s.linha}</td>
+                    <td class="col-pos">${s.coluna}</td>
+                `;
+                corpoTabelaSimbolos.appendChild(tr);
+            });
+        }
+
+        // Avisos Semânticos
+        if (sintatico.avisosSemanticos.length > 0) {
+            listaAvisosSemanticos.classList.remove("oculto");
+            listaAvisosSemanticos.innerHTML = sintatico.avisosSemanticos.map(a => `
+                <div class="item-aviso">
+                    <strong>Aviso (Linha ${a.linha}, Coluna ${a.coluna}):</strong> ${escaparHtml(a.mensagem)}
+                </div>
+            `).join("");
+        } else {
+            listaAvisosSemanticos.classList.add("oculto");
+            listaAvisosSemanticos.innerHTML = "";
+        }
+
+        // Erros Sintáticos
+        if (sintatico.errosSintaticos.length > 0) {
+            secaoErrosSintaticos.classList.remove("oculto");
+            listaErrosSintaticos.innerHTML = sintatico.errosSintaticos.map(e => `
+                <div class="item-erro">
+                    <div class="erro-icone">🛑</div>
+                    <div class="erro-detalhe">
+                        <strong>Linha ${e.linha}, Coluna ${e.coluna}:</strong> ${escaparHtml(e.mensagem)}
+                        <span class="erro-lexema">Token encontrado: <code>${escaparHtml(e.lexema)}</code></span>
+                    </div>
+                </div>
+            `).join("");
+        } else {
+            secaoErrosSintaticos.classList.add("oculto");
+            listaErrosSintaticos.innerHTML = "";
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -311,12 +539,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------------------------------------------------
     btnBaixarTxt.addEventListener("click", () => {
         if (tokensAtuais.length === 0) {
-            alert("Realize a análise léxica antes de baixar o arquivo de saída.");
+            alert("Realize a análise antes de baixar o arquivo de saída.");
             return;
         }
 
         let conteudo = "";
-        // Criação de arquivo com um par <cadeia, token> por linha conforme exigência da UESB
         tokensAtuais.forEach(t => {
             if (t.token !== TIPO_TOKEN.ERRO) {
                 conteudo += `<${t.lexema}, ${t.token}>\n`;
@@ -358,7 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function escaparHtml(texto) {
         if (!texto) return "";
-        return texto
+        return String(texto)
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")

@@ -1,0 +1,9 @@
+program TesteErrosLexicos;
+var salario: integer;
+begin
+    /* Testando caracteres desconhecidos e string não fechada */
+    salario := 1500;
+    Mari& := 10;
+    writeln("String nao fechada nesta linha;
+    valor@ := #50;
+end.

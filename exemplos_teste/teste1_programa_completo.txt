@@ -1,0 +1,14 @@
+program teste1;
+var x, y: integer;
+    ativo: boolean;
+/* Programa Sigma completo: leitura, atribuição, condicional e escrita */
+begin
+    read(x);
+    y := -x + 10 * 2;
+    if (x > y) then
+        y := x
+    else
+        y := -x;
+    writeln("Resultado y = ", y);
+    write(x);
+end.

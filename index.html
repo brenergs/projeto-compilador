@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador Léxico - Mini_Pascal | UESB</title>
+    <title>Analisador Léxico e Sintático SLR(1) - Sigma | UESB</title>
     <!-- Folha de Estilos Vanilla CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Cabeçalho Principal -->
+    <!-- Cabeçalho Principal com Ações e Especificações -->
     <header class="header-topo">
         <div class="header-info">
             <h1>
                 <span>Compiladores</span>
-                <span class="logo-tag">Mini_Pascal</span>
+                <span class="logo-tag">Sigma &bull; SLR(1)</span>
             </h1>
-            <p>Trabalho Prático da I Unidade &bull; UESB &bull; Analisador Léxico baseado em AFD</p>
+            <p>Trabalho Prático I e II Unidades &bull; UESB &bull; Analisador Léxico (AFD) e Sintático (SLR(1))</p>
         </div>
-        <div class="header-badges">
-            <span class="info-chip">Autômato Finito Determinístico</span>
-            <span class="info-chip">JavaScript Vanilla</span>
+        <div class="header-opcoes">
+            <button id="btn-abrir-especs" class="btn btn-secondary btn-sm" title="Abrir Especificações e Documentação">
+                📖 Especificações
+            </button>
+            <button id="btn-header-simulador" class="btn btn-primary btn-sm" title="Abrir Simulador Visual do AFD">
+                ⚙️ Simulador AFD
+            </button>
         </div>
     </header>
 
@@ -33,6 +37,14 @@
         <div class="card-stat stat-erros">
             <span class="stat-label">Erros Léxicos</span>
             <span class="stat-valor" id="stat-erros">0</span>
+        </div>
+        <div class="card-stat" id="card-stat-sintatico">
+            <span class="stat-label">Status Sintático (SLR(1))</span>
+            <span class="stat-valor" id="stat-sintatico">-</span>
+        </div>
+        <div class="card-stat">
+            <span class="stat-label">Símbolos Declarados</span>
+            <span class="stat-valor" id="stat-simbolos">0</span>
         </div>
         <div class="card-stat">
             <span class="stat-label">Linhas de Código</span>
@@ -50,15 +62,16 @@
         <!-- Coluna Esquerda: Editor de Código Fonte -->
         <section class="painel-card">
             <div class="painel-cabecalho">
-                <h2>💻 Código Fonte (Mini_Pascal)</h2>
+                <h2>💻 Código Fonte (Sigma)</h2>
                 <div class="barra-ferramentas">
                     <!-- Seletor de Testes Prontos -->
                     <select id="select-exemplo" class="select-exemplo" title="Carregar exemplo pré-definido">
-                        <option value="teste1">Teste 1: Exemplo Oficial (pi, if-else)</option>
-                        <option value="teste2">Teste 2: Programa Piloto (for, strings)</option>
-                        <option value="teste3">Teste 3: Repetições (while, repeat, lógicos)</option>
-                        <option value="teste4">Teste 4: Tipos e Notação Científica</option>
-                        <option value="teste5">Teste 5: Detecção de Erros Léxicos</option>
+                        <option value="teste1">Teste 1: Programa Completo (if-else, read, write)</option>
+                        <option value="teste2">Teste 2: Laço While e Comandos Compostos</option>
+                        <option value="teste3">Teste 3: Sem Declarações e Expressões Complexas</option>
+                        <option value="teste4">Teste 4: Dangling-Else e Operadores Relacionais</option>
+                        <option value="teste5">Teste 5: Detecção de Erros Sintáticos</option>
+                        <option value="teste6">Teste 6: Detecção de Erros Léxicos</option>
                     </select>
 
                     <!-- Input invisível para upload de arquivo .txt -->
@@ -86,14 +99,16 @@
             </div>
         </section>
 
-        <!-- Coluna Direita: Tokens Reconhecidos e Saída -->
+        <!-- Coluna Direita: Resultados da Análise Léxica e Sintática -->
         <section class="painel-card">
             <div class="painel-cabecalho">
-                <h2>📋 Tokens Reconhecidos</h2>
-                <div class="barra-ferramentas">
+                <h2>📋 Resultados da Análise</h2>
+                <div class="barra-ferramentas barra-ferramentas-saida">
                     <!-- Abas de Visualização -->
                     <div class="abas-container">
-                        <button id="tab-tabela" class="btn-tab active">Tabela</button>
+                        <button id="tab-rastreamento" class="btn-tab active">Sintático SLR(1)</button>
+                        <button id="tab-simbolos" class="btn-tab">Tabela de Símbolos</button>
+                        <button id="tab-tabela" class="btn-tab">Tokens</button>
                         <button id="tab-texto" class="btn-tab">Texto .txt</button>
                     </div>
 
@@ -105,8 +120,51 @@
             </div>
 
             <div class="container-saida">
-                <!-- Visão 1: Tabela Estruturada -->
-                <div id="view-tabela">
+                <!-- Visão 1: Rastreamento Sintático SLR(1) -->
+                <div id="view-rastreamento">
+                    <div id="banner-sintatico" class="banner-sintatico oculto"></div>
+                    <table class="tabela-tokens tabela-slr">
+                        <thead>
+                            <tr>
+                                <th class="col-num">#</th>
+                                <th>Pilha de Estados</th>
+                                <th>Pilha de Símbolos</th>
+                                <th>Entrada</th>
+                                <th>Ação SLR(1)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-rastreamento">
+                            <tr>
+                                <td colspan="5" class="tabela-vazia">Execute a análise para visualizar o rastreamento SLR(1).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Visão 2: Tabela de Símbolos -->
+                <div id="view-simbolos" class="oculto">
+                    <table class="tabela-tokens">
+                        <thead>
+                            <tr>
+                                <th class="col-num">#</th>
+                                <th>Identificador</th>
+                                <th>Categoria</th>
+                                <th>Tipo</th>
+                                <th class="col-pos">Linha</th>
+                                <th class="col-pos">Coluna</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-simbolos">
+                            <tr>
+                                <td colspan="6" class="tabela-vazia">Nenhum símbolo declarado ainda.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div id="lista-avisos-semanticos" class="lista-avisos oculto"></div>
+                </div>
+
+                <!-- Visão 3: Tabela Estruturada de Tokens -->
+                <div id="view-tabela" class="oculto">
                     <table class="tabela-tokens">
                         <thead>
                             <tr>
@@ -125,7 +183,7 @@
                     </table>
                 </div>
 
-                <!-- Visão 2: Formato Texto <cadeia, token> exigido na entrega -->
+                <!-- Visão 4: Formato Texto <cadeia, token> exigido na entrega -->
                 <div id="view-texto" class="oculto" style="height: 100%;">
                     <textarea id="saida-texto-formatado" class="area-saida-texto" readonly placeholder="A saída formatada em texto puro aparecerá aqui..."></textarea>
                 </div>
@@ -140,73 +198,176 @@
         <div id="lista-erros" class="lista-erros"></div>
     </section>
 
-    <!-- Documentação Técnica Integrada (Especificação do Autômato e Decisões de Projeto) -->
-    <section class="secao-doc-tecnica">
-        <h3>📖 Especificações e Documentação do Autômato Finito Determinístico (AFD)</h3>
-        
-        <div class="grid-doc">
-            <!-- Card 1: Decisões de Projeto -->
-            <div class="doc-card">
-                <h4>Decisões de Projeto (Conforme Roteiro UESB)</h4>
-                <ul>
-                    <li><strong>Limite de Identificadores:</strong> Suporta qualquer tamanho; identificadores iniciam com <code>[a-zA-Z_]</code> seguidos por letras, números ou underscore.</li>
-                    <li><strong>Estrutura de Dados:</strong> Tabela de Palavras Reservadas implementada via <code>Set</code> com busca em tempo constante <strong>O(1)</strong> e sensibilidade case-insensitive.</li>
-                    <li><strong>Comentários de Bloco:</strong> Delimitados por <code>/* ... */</code>, são reconhecidos e descartados explicitamente pelo autômato (não produzem token).</li>
-                    <li><strong>Tratamento de Erros:</strong> Modo de recuperação léxica que sinaliza o caractere/lexema desconhecido com linha e coluna exatas, continuando a análise dos tokens seguintes.</li>
-                </ul>
-            </div>
+    <!-- Painel de Relatório de Erros Sintáticos -->
+    <section id="secao-erros-sintaticos" class="secao-erros oculto">
+        <h3>🛑 Erros Sintáticos Detectados (SLR(1))</h3>
+        <div id="lista-erros-sintaticos" class="lista-erros"></div>
+    </section>
 
-            <!-- Card 2: Resumo dos Estados do AFD -->
-            <div class="doc-card">
-                <h4>Estados do Autômato Finito Determinístico</h4>
-                <table class="tabela-afd-resumo">
-                    <thead>
-                        <tr>
-                            <th>Estado</th>
-                            <th>Entrada</th>
-                            <th>Ação / Próximo Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>S0 (Início)</td><td>[a-zA-Z_]</td><td>S1 (Identificador / Palavra Reservada)</td></tr>
-                        <tr><td>S0 (Início)</td><td>[0-9]</td><td>S2 (Número Inteiro)</td></tr>
-                        <tr><td>S2</td><td>'.' + [0-9]</td><td>S4 (Número Real)</td></tr>
-                        <tr><td>S2 / S4</td><td>'e' / 'E'</td><td>S5, S6, S7 (Notação Exponencial)</td></tr>
-                        <tr><td>S0 (Início)</td><td>':'</td><td>S8 (se '=' &rarr; ':=' Atribuição, senão ':')</td></tr>
-                        <tr><td>S0 (Início)</td><td>'<' ou '>'</td><td>S9, S10 (se '=' &rarr; '<=', '>=', '<>')</td></tr>
-                        <tr><td>S0 (Início)</td><td>'/'</td><td>S11 (se '*' &rarr; Comentário de bloco S12)</td></tr>
-                        <tr><td>S0 (Início)</td><td>'"' ou "'"</td><td>S14 (String) / S15 (Caractere)</td></tr>
-                        <tr><td>S0 (Início)</td><td>'.'</td><td>Token 'Fim' (delimitador de fim de programa)</td></tr>
-                    </tbody>
-                </table>
+    <!-- Modal Popup de Especificações e Documentação Técnica -->
+    <div id="modal-especs" class="modal-afd-overlay oculto">
+        <div class="modal-afd-conteudo modal-especs-conteudo">
+            <div class="modal-afd-cabecalho">
+                <div class="modal-afd-titulo">
+                    <span class="modal-icone">📖</span>
+                    <div>
+                        <h3>Especificações Formais da Linguagem Sigma e Decisões de Projeto</h3>
+                        <p>UESB &bull; DCET &bull; Compiladores &bull; Analisador Léxico (AFD) e Sintático SLR(1)</p>
+                    </div>
+                </div>
+                <button id="btn-fechar-modal-especs" class="btn-fechar-modal" title="Fechar Especificações (Esc)">&times;</button>
             </div>
+            
+            <div class="modal-especs-corpo">
+                <div class="grid-doc">
+                    <!-- Card 1: Decisões de Projeto -->
+                    <div class="doc-card">
+                        <h4>Decisões de Projeto (Conforme Roteiro UESB)</h4>
+                        <ul>
+                            <li><strong>Limite de Identificadores:</strong> Suporta qualquer tamanho; identificadores iniciam com <code>[a-zA-Z_]</code> seguidos por letras, números ou underscore.</li>
+                            <li><strong>Estrutura de Dados:</strong> Tabela de Palavras Reservadas implementada via <code>Set</code> com busca em tempo constante <strong>O(1)</strong> e sensibilidade case-insensitive.</li>
+                            <li><strong>Comentários de Bloco:</strong> Delimitados por <code>/* ... */</code>, são reconhecidos e descartados explicitamente pelo autômato (não produzem token).</li>
+                            <li><strong>Tratamento de Erros:</strong> Modo de recuperação léxica que sinaliza o caractere/lexema desconhecido com linha e coluna exatas, continuando a análise dos tokens seguintes.</li>
+                        </ul>
+                    </div>
 
-            <!-- Card 3: Lista de Tokens Reconhecidos -->
-            <div class="doc-card">
-                <h4>Tokens Reconhecidos</h4>
-                <ul>
-                    <li><strong>Palavra reservada:</strong> ABSOLUTE, ARRAY, BEGIN, CONST, FOR, IF, INTEGER, REAL, VAR, WHILE...</li>
-                    <li><strong>Identificador:</strong> Nomes de variáveis, constantes, funções (ex: x, nota1, total).</li>
-                    <li><strong>Número inteiro:</strong> Sequência de dígitos decimais (ex: 1, 13, 100).</li>
-                    <li><strong>Número real:</strong> Ponto flutuante e notação científica (ex: 3.1416, 24.40e-04).</li>
-                    <li><strong>Operador aritmético:</strong> <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>mod</code>.</li>
-                    <li><strong>Operador relacional:</strong> <code>=</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;&gt;</code>.</li>
-                    <li><strong>Operador lógico:</strong> <code>and</code>, <code>or</code>, <code>not</code>.</li>
-                    <li><strong>Símbolo especial:</strong> <code>,</code>, <code>:</code>, <code>;</code>, <code>(</code>, <code>)</code>.</li>
-                    <li><strong>Atribuição:</strong> <code>:=</code>.</li>
-                    <li><strong>Fim:</strong> <code>.</code> no fechamento do bloco principal <code>end.</code></li>
-                </ul>
+                    <!-- Card 2: Resumo dos Estados do AFD -->
+                    <div class="doc-card">
+                        <h4>Estados do Autômato Finito Determinístico</h4>
+                        <table class="tabela-afd-resumo">
+                            <thead>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>Entrada</th>
+                                    <th>Ação / Próximo Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>S0 (Início)</td><td>[a-zA-Z_]</td><td>S1 (Identificador / Palavra Reservada)</td></tr>
+                                <tr><td>S0 (Início)</td><td>[0-9]</td><td>S2 (Número Inteiro)</td></tr>
+                                <tr><td>S2</td><td>'.' + [0-9]</td><td>S4 (Número Real)</td></tr>
+                                <tr><td>S2 / S4</td><td>'e' / 'E'</td><td>S5, S6, S7 (Notação Exponencial)</td></tr>
+                                <tr><td>S0 (Início)</td><td>':'</td><td>S8 (se '=' &rarr; ':=' Atribuição, senão ':')</td></tr>
+                                <tr><td>S0 (Início)</td><td>'<' ou '>'</td><td>S9, S10 (se '=' &rarr; '<=', '>=', '<>')</td></tr>
+                                <tr><td>S0 (Início)</td><td>'/'</td><td>S11 (se '*' &rarr; Comentário de bloco S12)</td></tr>
+                                <tr><td>S0 (Início)</td><td>'"' ou "'"</td><td>S14 (String) / S15 (Caractere)</td></tr>
+                                <tr><td>S0 (Início)</td><td>'.'</td><td>Token 'Fim' (delimitador de fim de programa)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Card 3: Lista de Tokens Reconhecidos -->
+                    <div class="doc-card">
+                        <h4>Tokens Reconhecidos</h4>
+                        <ul>
+                            <li><strong>Palavra reservada:</strong> PROGRAM, VAR, INTEGER, BOOLEAN, BEGIN, END, READ, READLN, WRITE, WRITELN, IF, THEN, ELSE, WHILE, DO...</li>
+                            <li><strong>Identificador:</strong> Nomes de variáveis e programa (ex: x, nota1, total).</li>
+                            <li><strong>Número inteiro / real:</strong> Sequência de dígitos e ponto flutuante (ex: 1, 13, 3.1416).</li>
+                            <li><strong>Operador aritmético:</strong> <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>.</li>
+                            <li><strong>Operador relacional:</strong> <code>=</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;&gt;</code>.</li>
+                            <li><strong>Símbolo especial:</strong> <code>,</code>, <code>:</code>, <code>;</code>, <code>(</code>, <code>)</code>.</li>
+                            <li><strong>Atribuição:</strong> <code>:=</code>.</li>
+                            <li><strong>Fim:</strong> <code>.</code> no fechamento do bloco principal <code>end.</code></li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 4: Analisador Sintático SLR(1) -->
+                    <div class="doc-card">
+                        <h4>Analisador Sintático SLR(1) (II Unidade)</h4>
+                        <ul>
+                            <li><strong>Técnica:</strong> Analisador ascendente (<em>Shift-Reduce</em>) com tabela ACTION/GOTO gerada automaticamente a partir da coleção canônica LR(0) (<strong>105 estados</strong>, <strong>0 conflitos</strong>).</li>
+                            <li><strong>Precedência e Associatividade:</strong> Expressões aritméticas refatoradas em <code>E</code>, <code>Term</code> e <code>Fat</code> (<code>*</code>, <code>/</code> &gt; <code>+</code>, <code>-</code>, unário <code>-</code>).</li>
+                            <li><strong>Dangling-Else:</strong> Resolvido sem ambiguidade pela separação entre comandos fechados (<code>C_fechado</code>) e abertos (<code>C_aberto</code>).</li>
+                            <li><strong>Tabela de Símbolos:</strong> Preenchida durante as reduções de declarações (<code>program</code> e <code>var</code>), registrando tipo, categoria e posição.</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- Rodapé -->
     <footer class="rodape">
-        <p>UESB &bull; Departamento de Ciências Exatas (DCET) &bull; Compiladores &bull; Analisador Léxico Mini_Pascal</p>
+        <p>UESB &bull; Departamento de Ciências Exatas (DCET) &bull; Compiladores &bull; Analisador Léxico e Sintático SLR(1) (Sigma)</p>
     </footer>
+
+    <!-- Botão Flutuante no Canto Inferior Esquerdo (Simulador AFD) -->
+    <button id="btn-flutuante-afd" class="btn-flutuante-afd" title="Abrir Simulador Visual do AFD">
+        <span class="icone-btn-flutuante">⚙️</span>
+        <span class="texto-btn-flutuante">Simulador AFD</span>
+        <span class="badge-pulsante-afd">IHC</span>
+    </button>
+
+    <!-- Modal Popup do Simulador Visual do AFD -->
+    <div id="modal-simulador-afd" class="modal-afd-overlay oculto">
+        <div class="modal-afd-conteudo">
+            <div class="modal-afd-cabecalho">
+                <div class="modal-afd-titulo">
+                    <span class="modal-icone">🔍</span>
+                    <div>
+                        <h3>Simulador Visual do AFD (Autômato Finito Determinístico)</h3>
+                        <p>Modelo didático e interativo de transição de estados do Analisador Léxico</p>
+                    </div>
+                </div>
+                <button id="btn-fechar-modal-afd" class="btn-fechar-modal" title="Fechar Simulador (Esc)">&times;</button>
+            </div>
+
+            <!-- Barra de Controles de Reprodução Didática e Zoom -->
+            <div class="painel-controle-afd">
+                <div class="botoes-player">
+                    <button id="btn-afd-inicio" class="btn btn-outline btn-xs" title="Voltar ao início">⏮ Início</button>
+                    <button id="btn-afd-ant" class="btn btn-outline btn-xs" title="Passo anterior">◀ Passo</button>
+                    <button id="btn-afd-play" class="btn btn-primary btn-xs" title="Reproduzir / Pausar">▶ Play</button>
+                    <button id="btn-afd-prox" class="btn btn-outline btn-xs" title="Próximo passo">Passo ▶</button>
+                </div>
+                <div class="controles-zoom-pan">
+                    <button id="btn-zoom-menos" class="btn btn-outline btn-xs" title="Diminuir Zoom">−</button>
+                    <span id="label-zoom-nivel" class="label-zoom">100%</span>
+                    <button id="btn-zoom-mais" class="btn btn-outline btn-xs" title="Aumentar Zoom">+</button>
+                    <button id="btn-zoom-reset" class="btn btn-outline btn-xs" title="Redefinir Posição e Zoom">⟲ Reset</button>
+                </div>
+                <div class="controle-velocidade">
+                    <label for="range-afd-vel">Velocidade:</label>
+                    <input type="range" id="range-afd-vel" min="100" max="1200" step="100" value="600" title="Velocidade da animação (ms)">
+                    <span id="label-afd-vel">600ms</span>
+                </div>
+            </div>
+
+            <!-- HUD de Feedback do Autômato (Visibilidade do Status do Sistema) -->
+            <div class="hud-afd">
+                <div class="hud-item">
+                    <span class="hud-rotulo">Passo</span>
+                    <span class="hud-valor" id="afd-hud-passo">0 / 0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-rotulo">Caractere Lido</span>
+                    <span class="hud-valor hud-destaque" id="afd-hud-char">-</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-rotulo">Lexema Atual</span>
+                    <span class="hud-valor" id="afd-hud-lexema">-</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-rotulo">Estado Destino</span>
+                    <span class="hud-valor hud-estado" id="afd-hud-estado">S0</span>
+                </div>
+            </div>
+
+            <div class="afd-mensagem-passo" id="afd-hud-msg">
+                Carregue um código e clique em Executar Análise para simular o AFD. Dica: Arraste a tela com o mouse e use a roda do scroll para zoom.
+            </div>
+
+            <!-- Canvas/SVG Interativo do Autômato -->
+            <div class="svg-viewport-wrapper modal-viewport">
+                <svg id="svg-afd" viewBox="0 0 960 580" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts JavaScript (Vanilla, sem dependências externas) -->
     <script src="lexer.js"></script>
+    <script src="simulador_afd.js"></script>
+    <script src="parser.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

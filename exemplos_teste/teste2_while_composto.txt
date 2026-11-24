@@ -1,0 +1,15 @@
+program LacowhileComposto;
+var i, limite, soma: integer;
+/* Teste de laço while e comandos compostos */
+begin
+    i := 1;
+    soma := 0;
+    write("Informe o limite: ");
+    readln(limite);
+    while i <= limite do
+    begin
+        soma := soma + i;
+        i := i + 1;
+    end;
+    writeln("Soma acumulada = ", soma);
+end.

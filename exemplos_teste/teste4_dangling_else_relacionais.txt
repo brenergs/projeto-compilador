@@ -1,0 +1,21 @@
+program DanglingElseERelacionais;
+var a, b: integer;
+    flag: boolean;
+begin
+    read(a, b);
+    if a < b then
+        if a <= 0 then
+            writeln("a menor que b e nao positivo")
+        else
+            writeln("a menor que b e positivo");
+    if a > b then
+        writeln("a maior que b");
+    if a >= b then
+        writeln("a maior ou igual a b");
+    if a = b then
+        writeln("iguais");
+    if a <> b then
+        write("diferentes");
+    if flag then
+        writeln("Flag booleana ativa");
+end.
